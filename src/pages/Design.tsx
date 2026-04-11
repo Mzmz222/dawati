@@ -22,7 +22,8 @@ import { triggerN8N, getWhatsAppNumber } from '../lib/n8n';
 
 // Schemas
 const eventSchema = z.object({
-  title: z.string().min(3, 'عنوان المناسبة مطلوب'),
+  groomName: z.string().min(2, 'اسم العريس مطلوب'),
+  brideName: z.string().min(2, 'اسم العروس مطلوب'),
   date: z.string().min(1, 'التاريخ مطلوب'),
   time: z.string().min(1, 'الوقت مطلوب'),
   city: z.string().min(1, 'المدينة مطلوبة'),
@@ -43,6 +44,7 @@ type GuestFormData = z.infer<typeof guestSchema>;
 export default function Design() {
   const [phase, setPhase] = useState<'setup' | 'guests'>('setup');
   const [selectedTemplate, setSelectedTemplate] = useState('royal_elegance');
+  const [customTemplateUrl, setCustomTemplateUrl] = useState<string | null>(null);
   const [previewType, setPreviewType] = useState<'invitation' | 'barcode'>('invitation');
   const [isPaid] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -92,13 +94,13 @@ export default function Design() {
         .from('events')
         .insert([{
           user_id: user.id,
-          title: data.title,
+          title: `${data.groomName} & ${data.brideName}`,
           date: data.date,
           time: data.time,
           city: data.city,
           district: data.district,
           location_url: data.locationUrl,
-          card_template_id: selectedTemplate,
+          card_template_id: selectedTemplate === 'custom' ? 'custom' : selectedTemplate,
           payment_status: 'unpaid'
         }])
         .select()
@@ -241,13 +243,24 @@ export default function Design() {
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 font-body">
-                <div className="md:col-span-2 space-y-2">
-                  <label className="text-sm font-bold text-on-surface-variant px-1">عنوان المناسبة</label>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-on-surface-variant px-1">اسم العريس</label>
                   <input
-                    {...register('title')}
-                    placeholder="زفاف ناصر وسارة"
-                    className={cn("w-full bg-surface-container-low border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary/20", errors.title && "ring-2 ring-error")}
+                    {...register('groomName')}
+                    placeholder="فهد"
+                    className={cn("w-full bg-surface-container-low border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary/20", errors.groomName && "ring-2 ring-error")}
                   />
+                  {errors.groomName && <p className="text-xs text-error font-bold">{errors.groomName.message}</p>}
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-on-surface-variant px-1">اسم العروس</label>
+                  <input
+                    {...register('brideName')}
+                    placeholder="سارة"
+                    className={cn("w-full bg-surface-container-low border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary/20", errors.brideName && "ring-2 ring-error")}
+                  />
+                  {errors.brideName && <p className="text-xs text-error font-bold">{errors.brideName.message}</p>}
                 </div>
                 
                 <div className="space-y-2">
@@ -299,6 +312,33 @@ export default function Design() {
               <div className="space-y-4">
                 <h3 className="text-xl font-bold text-on-surface font-headline">اختر قالب الدعوة والباركود</h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  <label className={cn(
+                    "relative aspect-[3/4] cursor-pointer rounded-2xl overflow-hidden border-4 transition-all flex flex-col items-center justify-center bg-surface-container-low",
+                    selectedTemplate === 'custom' ? "border-primary shadow-xl" : "border-outline-variant/20"
+                  )}>
+                    <input 
+                      type="file" 
+                      className="hidden" 
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const url = URL.createObjectURL(file);
+                          setCustomTemplateUrl(url);
+                          setSelectedTemplate('custom');
+                        }
+                      }}
+                    />
+                    {customTemplateUrl ? (
+                      <img src={customTemplateUrl} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="text-center p-4">
+                        <Plus className="w-8 h-8 mx-auto text-primary mb-2" />
+                        <span className="text-xs font-bold text-primary">رفع من الاستوديو</span>
+                      </div>
+                    )}
+                  </label>
+
                   {['royal_elegance', 'modern_chic', 'classic_gold'].map((temp) => (
                     <div 
                       key={temp}
@@ -496,7 +536,7 @@ export default function Design() {
                     
                     <div className="space-y-4">
                       <h4 className="font-headline font-bold text-3xl text-primary underline decoration-primary/20 underline-offset-8">
-                        {eventData.title || 'عنوان المناسبة'}
+                        {eventData.groomName || 'اسم العريس'} & {eventData.brideName || 'اسم العروس'}
                       </h4>
                       <div className="w-16 h-0.5 bg-primary/20 mx-auto"></div>
                       <p className="font-serif italic text-lg text-on-surface-variant leading-relaxed max-w-xs mx-auto">

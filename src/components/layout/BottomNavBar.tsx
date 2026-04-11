@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '../../lib/utils';
 import {
@@ -9,6 +10,27 @@ import {
 
 export default function BottomNavBar() {
   const location = useLocation();
+  const [visible, setVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      // If scrolling UP, hide (user's request)
+      // If scrolling DOWN, show
+      if (currentScrollY < lastScrollY && currentScrollY > 50) {
+        setVisible(false);
+      } else {
+        setVisible(true);
+      }
+      
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
 
   const navItems = [
     { to: '/', label: 'الرئيسية', icon: Home },
@@ -18,7 +40,10 @@ export default function BottomNavBar() {
   ];
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 h-20 pb-safe bg-white/90 dark:bg-zinc-950/90 backdrop-blur-xl rounded-t-[2.5rem] border-t border-zinc-100 dark:border-zinc-800 shadow-[0_-8px_30px_rgba(0,0,0,0.08)]">
+    <div className={cn(
+      "md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 h-20 pb-safe bg-white/90 dark:bg-zinc-950/90 backdrop-blur-xl rounded-t-[2.5rem] border-t border-zinc-100 dark:border-zinc-800 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] transition-transform duration-500",
+      visible ? "translate-y-0" : "translate-y-full"
+    )}>
       {navItems.map((item) => {
         const isActive = location.pathname === item.to;
         return (
