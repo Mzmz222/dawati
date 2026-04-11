@@ -52,7 +52,8 @@ interface TemplateState {
 const INVITATION_AVAILABLE_FIELDS: FieldConfig[] = [
   { id: 'groomName', label: 'اسم العريس', x: 50, y: 20, fontSize: 28, fontFamily: 'Amiri', color: '#1a1a1a', bold: true, italic: false, enabled: false },
   { id: 'brideName', label: 'اسم العروس', x: 50, y: 30, fontSize: 28, fontFamily: 'Amiri', color: '#1a1a1a', bold: true, italic: false, enabled: false },
-  { id: 'time', label: 'وقت الحفل', x: 50, y: 45, fontSize: 18, fontFamily: 'Cairo', color: '#4a4a4a', bold: false, italic: false, enabled: false },
+  { id: 'dayName', label: 'اليوم', x: 50, y: 40, fontSize: 18, fontFamily: 'Cairo', color: '#4a4a4a', bold: true, italic: false, enabled: false },
+  { id: 'time', label: 'وقت الحفل', x: 50, y: 48, fontSize: 18, fontFamily: 'Cairo', color: '#4a4a4a', bold: false, italic: false, enabled: false },
   { id: 'date', label: 'تاريخ الحفل', x: 50, y: 55, fontSize: 18, fontFamily: 'Cairo', color: '#4a4a4a', bold: false, italic: false, enabled: false },
   { id: 'city', label: 'المدينة', x: 40, y: 65, fontSize: 16, fontFamily: 'Tajawal', color: '#4a4a4a', bold: false, italic: false, enabled: false },
   { id: 'district', label: 'الحي', x: 60, y: 65, fontSize: 16, fontFamily: 'Tajawal', color: '#4a4a4a', bold: false, italic: false, enabled: false },
@@ -61,10 +62,11 @@ const INVITATION_AVAILABLE_FIELDS: FieldConfig[] = [
 const BARCODE_AVAILABLE_FIELDS: FieldConfig[] = [
   { id: 'groomName', label: 'اسم العريس', x: 50, y: 15, fontSize: 24, fontFamily: 'Amiri', color: '#1a1a1a', bold: true, italic: false, enabled: false },
   { id: 'brideName', label: 'اسم العروس', x: 50, y: 25, fontSize: 24, fontFamily: 'Amiri', color: '#1a1a1a', bold: true, italic: false, enabled: false },
-  { id: 'time', label: 'وقت الحفل', x: 50, y: 38, fontSize: 16, fontFamily: 'Cairo', color: '#4a4a4a', bold: false, italic: false, enabled: false },
-  { id: 'date', label: 'تاريخ الحفل', x: 50, y: 46, fontSize: 16, fontFamily: 'Cairo', color: '#4a4a4a', bold: false, italic: false, enabled: false },
-  { id: 'city', label: 'المدينة', x: 40, y: 55, fontSize: 14, fontFamily: 'Tajawal', color: '#4a4a4a', bold: false, italic: false, enabled: false },
-  { id: 'district', label: 'الحي', x: 60, y: 55, fontSize: 14, fontFamily: 'Tajawal', color: '#4a4a4a', bold: false, italic: false, enabled: false },
+  { id: 'dayName', label: 'اليوم', x: 50, y: 34, fontSize: 16, fontFamily: 'Cairo', color: '#4a4a4a', bold: true, italic: false, enabled: false },
+  { id: 'time', label: 'وقت الحفل', x: 50, y: 42, fontSize: 16, fontFamily: 'Cairo', color: '#4a4a4a', bold: false, italic: false, enabled: false },
+  { id: 'date', label: 'تاريخ الحفل', x: 50, y: 49, fontSize: 16, fontFamily: 'Cairo', color: '#4a4a4a', bold: false, italic: false, enabled: false },
+  { id: 'city', label: 'المدينة', x: 40, y: 57, fontSize: 14, fontFamily: 'Tajawal', color: '#4a4a4a', bold: false, italic: false, enabled: false },
+  { id: 'district', label: 'الحي', x: 60, y: 57, fontSize: 14, fontFamily: 'Tajawal', color: '#4a4a4a', bold: false, italic: false, enabled: false },
   { id: 'companions', label: 'عدد المرافقين', x: 50, y: 90, fontSize: 14, fontFamily: 'Cairo', color: '#333', bold: true, italic: false, enabled: false },
 ];
 

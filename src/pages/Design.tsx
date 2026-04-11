@@ -20,6 +20,17 @@ import { cn } from '../lib/utils';
 import { supabase } from '../lib/supabase';
 import { triggerN8N, getWhatsAppNumber } from '../lib/n8n';
 
+// Helper: Get Arabic day name from date string
+const ARABIC_DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+const getDayName = (dateStr: string): string => {
+  if (!dateStr) return '';
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '';
+    return 'يوم ' + ARABIC_DAYS[d.getDay()];
+  } catch { return ''; }
+};
+
 // Schemas
 const eventSchema = z.object({
   groomName: z.string().min(2, 'اسم العريس مطلوب'),
@@ -545,9 +556,14 @@ export default function Design() {
                     </div>
 
                     <div className="space-y-4 font-headline font-semibold text-sm uppercase tracking-[0.2em] text-primary bg-primary/5 p-6 rounded-2xl">
+                      {eventData.date && getDayName(eventData.date) && (
+                        <div className="flex items-center justify-center gap-3 text-primary/80">
+                          {getDayName(eventData.date)}
+                        </div>
+                      )}
                       <div className="flex items-center justify-center gap-3">
                         <Calendar className="w-4 h-4 opacity-70" />
-                        {eventData.date || 'اليوم، التاريخ'}
+                        {eventData.date || 'التاريخ'}
                       </div>
                       <div className="flex items-center justify-center gap-3">
                          <Clock className="w-4 h-4 opacity-70" />
