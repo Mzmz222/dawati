@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;family=Noto+Serif:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#512da8",
+                        "primary-container": "#e8ddff",
+                        "on-primary": "#ffffff",
+                        "on-primary-container": "#1d0061",
+                        "secondary": "#006d2f",
+                        "secondary-container": "#5dfd8a",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-container": "#002109",
+                        "tertiary": "#3d2755",
+                        "tertiary-container": "#efdbff",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-container": "#26103e",
+                        "surface": "#f8f9fa",
+                        "surface-variant": "#e1e3e4",
+                        "on-surface": "#191c1d",
+                        "on-surface-variant": "#494553",
+                        "outline": "#7a7584",
+                        "outline-variant": "#cbc3d5",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-low": "#f3f4f5",
+                        "surface-container": "#edeeef",
+                        "surface-container-high": "#e7e8e9",
+                        "surface-container-highest": "#e1e3e4",
+                        "deeppurple": {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                        }
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "1rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans", "Noto Serif"],
+                        "body": ["Manrope"],
+                        "label": ["Plus Jakarta Sans"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24
+        }
+        .paper-noise {
+            position: relative
+        }
+        .paper-noise::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            opacity: 0.03;
+            pointer-events: none;
+            background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuCwKMpfYZ9jX56LCImELXAZBRMYbHL36M7Tm0B8rStpRUyL0SRGwRCX8tctaRteZwOaiAlwG1uKAMYAMtsc-B_rBpzNd3PnLRxRMlVUeTFp4W44THLl5lGpyplY4kv5ljqiiIsxEYsVmurC0LfFitODdP5OkI-F1u7MiJCVocx4xGV-OIY6wPIyqq8npcpioJ05ffgOxz_tOYTidMSy6U9AbcG_Iwt0L9XzK_UFxt9KIWxkNd-GsPle4YCwNWVRgfvV-GSWnFkREXM)
+        }
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body paper-noise">
+<!-- TopAppBar Component (from COMPONENTS_8) -->
+<header class="bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md fixed top-0 w-full z-50 tonal-shift bg-zinc-50 dark:bg-zinc-900 shadow-sm dark:shadow-none">
+<div class="flex justify-between items-center px-6 h-16 w-full max-w-7xl mx-auto">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-deeppurple-700 dark:text-deeppurple-400 cursor-pointer active:scale-95 duration-200">menu</span>
+<h1 class="text-2xl font-bold text-deeppurple-800 dark:text-deeppurple-300 font-['Plus_Jakarta_Sans'] tracking-tight">Dawati</h1>
+</div>
+<nav class="hidden md:flex gap-8">
+<a class="text-deeppurple-700 dark:text-deeppurple-400 font-semibold font-['Plus_Jakarta_Sans'] hover:bg-deeppurple-50 dark:hover:bg-deeppurple-900/30 transition-colors px-2 py-1 rounded" href="#">Design Studio</a>
+<a class="text-zinc-600 dark:text-zinc-400 font-['Plus_Jakarta_Sans'] hover:bg-deeppurple-50 dark:hover:bg-deeppurple-900/30 transition-colors px-2 py-1 rounded" href="#">Guest List</a>
+<a class="text-zinc-600 dark:text-zinc-400 font-['Plus_Jakarta_Sans'] hover:bg-deeppurple-50 dark:hover:bg-deeppurple-900/30 transition-colors px-2 py-1 rounded" href="#">Dashboard</a>
+</nav>
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold overflow-hidden ring-2 ring-primary/20 cursor-pointer active:scale-95 duration-200">
+<img alt="User profile avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3uzsoLewEmEO6AIwSc_yVd4wV8crXmSD9OYgwQIJMYEbSmjPMEndffJHwTOzS2S5Kj0eIYPx-t7kh-BbQJDRIV6mlRvlCxZyu-LqT2KTMfdiPzREeKute2WyR0L07DAlBWj68I5jHDWCy7_VxHv-yX71Wf2-OMjtUfUsfxoQHtNcEZN9t9qaeoAbMdJLSRCz7xtz7p2r_vauNi1_P4jgpX7a5RM6DJlIHLd93KDJFdAUYjHlZWjVRpTTdIH0jTsQNNWytodl3Wqs"/>
+</div>
+</div>
+</header>
+<main class="max-w-7xl mx-auto px-6 pt-28 pb-12 grid grid-cols-1 lg:grid-cols-12 gap-12">
+<!-- Sidebar / NavigationDrawer Header (Conceptual Sidebar in this layout) -->
+<aside class="hidden lg:block lg:col-span-1">
+<div class="sticky top-28 flex flex-col gap-6">
+<div class="p-3 bg-deeppurple-100 dark:bg-deeppurple-900/40 text-deeppurple-900 dark:text-deeppurple-100 rounded-lg transition-all duration-300 flex items-center justify-center cursor-pointer">
+<span class="material-symbols-outlined">auto_fix_high</span>
+</div>
+<div class="p-3 text-zinc-700 dark:text-zinc-300 hover:bg-deeppurple-50 dark:hover:bg-zinc-900 rounded-lg transition-all duration-300 flex items-center justify-center cursor-pointer">
+<span class="material-symbols-outlined">dashboard</span>
+</div>
+<div class="p-3 text-zinc-700 dark:text-zinc-300 hover:bg-deeppurple-50 dark:hover:bg-zinc-900 rounded-lg transition-all duration-300 flex items-center justify-center cursor-pointer">
+<span class="material-symbols-outlined">group</span>
+</div>
+<div class="p-3 text-zinc-700 dark:text-zinc-300 hover:bg-deeppurple-50 dark:hover:bg-zinc-900 rounded-lg transition-all duration-300 flex items-center justify-center cursor-pointer">
+<span class="material-symbols-outlined">settings</span>
+</div>
+</div>
+</aside>
+<!-- Main Workspace -->
+<div class="lg:col-span-11 space-y-16">
+<!-- Page Header -->
+<section class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-outline-variant/20 pb-8">
+<div class="space-y-2">
+<span class="text-sm font-bold tracking-widest text-primary uppercase font-['Plus_Jakarta_Sans']">التصميم الحالي</span>
+<h2 class="text-5xl font-['Plus_Jakarta_Sans'] font-extrabold text-on-surface tracking-tight">مرسم التصميم الرقمي</h2>
+</div>
+<p class="text-on-surface-variant max-w-md text-lg leading-relaxed">
+                ابتكر دعوة زفافك بلمسة عصرية تحاكي فخامة الورق وتطور التقنية. كل تفصيل هنا صُمم ليعبر عن حكايتكم.
+            </p>
+</section>
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-16">
+<!-- Left Column: Inputs & Templates -->
+<div class="space-y-12">
+<!-- Inputs Section -->
+<div class="bg-surface-container-lowest p-10 rounded-xl shadow-sm space-y-8">
+<h3 class="text-2xl font-['Plus_Jakarta_Sans'] font-bold text-primary flex items-center gap-3">
+<span class="material-symbols-outlined">edit_note</span>
+                        تفاصيل المناسبة
+                    </h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="relative group">
+<input class="peer w-full bg-transparent border-0 border-b border-outline-variant/40 focus:ring-0 focus:border-primary transition-all py-3 px-0" placeholder=" " type="text"/>
+<label class="absolute right-0 top-3 text-on-surface-variant transition-all peer-focus:-top-4 peer-focus:text-sm peer-focus:text-primary peer-[:not(:placeholder-shown)]:-top-4 peer-[:not(:placeholder-shown)]:text-sm">اسم العريس</label>
+</div>
+<div class="relative group">
+<input class="peer w-full bg-transparent border-0 border-b border-outline-variant/40 focus:ring-0 focus:border-primary transition-all py-3 px-0" placeholder=" " type="text"/>
+<label class="absolute right-0 top-3 text-on-surface-variant transition-all peer-focus:-top-4 peer-focus:text-sm peer-focus:text-primary peer-[:not(:placeholder-shown)]:-top-4 peer-[:not(:placeholder-shown)]:text-sm">اسم العروس</label>
+</div>
+<div class="relative group">
+<input class="peer w-full bg-transparent border-0 border-b border-outline-variant/40 focus:ring-0 focus:border-primary transition-all py-3 px-0" placeholder=" " type="date"/>
+<label class="absolute right-0 -top-4 text-sm text-on-surface-variant">تاريخ الحفل</label>
+</div>
+<div class="relative group">
+<input class="peer w-full bg-transparent border-0 border-b border-outline-variant/40 focus:ring-0 focus:border-primary transition-all py-3 px-0" placeholder=" " type="time"/>
+<label class="absolute right-0 -top-4 text-sm text-on-surface-variant">وقت الحفل</label>
+</div>
+<div class="relative group">
+<input class="peer w-full bg-transparent border-0 border-b border-outline-variant/40 focus:ring-0 focus:border-primary transition-all py-3 px-0" placeholder=" " type="text"/>
+<label class="absolute right-0 top-3 text-on-surface-variant transition-all peer-focus:-top-4 peer-focus:text-sm peer-focus:text-primary peer-[:not(:placeholder-shown)]:-top-4 peer-[:not(:placeholder-shown)]:text-sm">المدينة والحي</label>
+</div>
+<div class="relative group">
+<input class="peer w-full bg-transparent border-0 border-b border-outline-variant/40 focus:ring-0 focus:border-primary transition-all py-3 px-0" placeholder=" " type="text"/>
+<label class="absolute right-0 top-3 text-on-surface-variant transition-all peer-focus:-top-4 peer-focus:text-sm peer-focus:text-primary peer-[:not(:placeholder-shown)]:-top-4 peer-[:not(:placeholder-shown)]:text-sm">اسم القاعة</label>
+</div>
+<div class="relative group md:col-span-2">
+<input class="peer w-full bg-transparent border-0 border-b border-outline-variant/40 focus:ring-0 focus:border-primary transition-all py-3 px-0" placeholder=" " type="url"/>
+<label class="absolute right-0 top-3 text-on-surface-variant transition-all peer-focus:-top-4 peer-focus:text-sm peer-focus:text-primary peer-[:not(:placeholder-shown)]:-top-4 peer-[:not(:placeholder-shown)]:text-sm">رابط الموقع (Google Maps)</label>
+</div>
+</div>
+</div>
+<!-- Templates Gallery -->
+<div class="space-y-6">
+<div class="flex items-center justify-between">
+<h3 class="text-2xl font-['Plus_Jakarta_Sans'] font-bold text-on-surface">اختر قالب الدعوة</h3>
+<button class="text-primary font-bold text-sm hover:underline">عرض الكل</button>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+<div class="group relative aspect-[3/4] overflow-hidden rounded-xl border-4 border-primary shadow-lg ring-4 ring-primary/10">
+<img alt="Template" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-3iNZo01Eif1n8gK_ziH6DKdBPLv8vpkrsAkaWuOSYjEocRH2LSS1BTlQ9w8yLqJS56vLdud5HWj_mNtQTk7TRPLDs6Ht9hNN50Ly-TKB0xkvHQxpW4_LgJsxWaMVIxe15b0UeTOzUz9Z5praC6oMsWSfRvzogE5bwafoYg6n0fGU_6_C5UHqvlIj42fGGHlCY9eddATagY9R_2Bn2At6LUOxo3s6IFZm14Y-zD85yg_apQZ87R4EJOsTWEWhdo2u_AdNRhK-fQc"/>
+<div class="absolute inset-0 bg-primary/20 flex items-center justify-center opacity-100">
+<span class="material-symbols-outlined text-white text-3xl">check_circle</span>
+</div>
+</div>
+<div class="group relative aspect-[3/4] overflow-hidden rounded-xl border border-outline-variant/20 cursor-pointer">
+<img alt="Template" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKywleR9oue_NXhc_7Q2-UDMMpOZNe42nGd3ukbh8E4tC6nRxgtMkzu7rYSL13JEzyPdzcolcAzKeH9mNWm8vnXrFzdAF4nJxccbbYwjemKVvGNDP3RFQaGdcmj5tKaA8DRL6zyb10GziIMcX8PGFDwaClw5GwKXXZE8T5eVsjAqWQ3UqOZ0pmiRNoOIMOIu-iVzXvnn1dPFoUhoo13L5vXhMqvE2hVMwap_MBJZFOGyHZVNy7FXjg0gcgCk7aYNCCcvrobBrYxFM"/>
+<div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
+</div>
+<div class="group relative aspect-[3/4] overflow-hidden rounded-xl border border-outline-variant/20 cursor-pointer">
+<img alt="Template" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVQNC1ut-5I7-fVJ8JSwZZgOneu48fgSTa9buODqczA6WRSdxFz6SAUdGG-jA5DKMrVL2DKC1MOmGg7qnpgMdyAIStG5QJkx2O8FAaD0LwiuaqI2cwHD6jKtzuY3Y6uwOP9f_IxwF1ig3wnxehHcO1WEtVAIyPiFcqMEh-Lv2ASZCOdznCboliPSvLZWcYk-mE637fLTK4AtJeToZgF4awBxtD4erYt2xdL23iuTxP5rcTlfIRO0xIWtvUAemIlnyId06t5xqWCXk"/>
+<div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Live Preview Glass -->
+<div class="relative">
+<div class="sticky top-32 space-y-12">
+<div class="relative group bg-surface-container-lowest p-4 rounded-xl shadow-[0_40px_80px_rgba(81,45,168,0.08)]">
+<!-- Watermark -->
+<div class="absolute inset-0 z-20 flex items-center justify-center pointer-events-none overflow-hidden">
+<div class="text-surface-container-highest/60 text-7xl font-['Plus_Jakarta_Sans'] font-black uppercase tracking-[1em] -rotate-45 whitespace-nowrap opacity-30 select-none">
+                                معاينة - دعواتي
+                            </div>
+</div>
+<!-- Invitation Card Frame -->
+<div class="relative aspect-[3/4.5] rounded-lg overflow-hidden bg-white shadow-inner flex flex-col items-center justify-center text-center p-12">
+<div class="absolute inset-0 opacity-5">
+<img alt="Background Texture" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAO968fAV10FWoZ_ubNNIGYheWb0de8dnO0ktqiiQAZH6PGqsTSVKLzWz92W56aoseFut0heGjLX5Q3y73nt3GQJE3nrOIEb3v63zMVqT6X3rYYC8e4cbIQcbNOaURPotUoGQuo-J2mqDg9Lcf_bMm5TlR9JatsvrbplpvmjVPS2ytHQS_g8h0yLOOOUL8_YOerJSulG4cmp46OcUyZnzEdb6VMJLYsJaWmBQraPQyRoLTCcRxglqu2PswcPeTjKVDbglzkxWgHUjA"/>
+</div>
+<div class="relative z-10 space-y-8">
+<span class="material-symbols-outlined text-primary text-5xl opacity-40">favorite</span>
+<div class="space-y-4">
+<h4 class="font-['Plus_Jakarta_Sans'] font-bold text-3xl text-on-surface">ناصر &amp; سارة</h4>
+<div class="w-12 h-0.5 bg-primary/20 mx-auto"></div>
+<p class="font-['Noto_Serif'] italic text-lg text-on-surface-variant leading-relaxed">
+                                        بكل الحب، ندعوكم لمشاركتنا فرحة العمر في ليلة تكتمل بوجودكم
+                                    </p>
+</div>
+<div class="space-y-2 font-['Plus_Jakarta_Sans'] font-semibold text-sm uppercase tracking-widest text-primary">
+<p>الثلاثاء، 24 ديسمبر 2024</p>
+<p>الساعة 8:00 مساءً</p>
+<p>قاعة الأماني - الرياض</p>
+</div>
+</div>
+</div>
+<!-- Live Preview Glass Panel -->
+<div class="absolute -bottom-6 -right-6 -left-6 bg-surface-container-lowest/80 backdrop-blur-xl p-6 rounded-xl border border-white/50 shadow-lg flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div>
+<p class="text-sm font-bold font-['Plus_Jakarta_Sans']">معاينة مباشرة</p>
+<p class="text-xs text-on-surface-variant">يتم تحديث البيانات فورياً</p>
+</div>
+</div>
+<button class="bg-primary hover:bg-primary-container text-white px-6 py-2 rounded transition-all text-sm font-bold shadow-md shadow-primary/20">حفظ المسودة</button>
+</div>
+</div>
+<!-- Trial Section -->
+<div class="bg-deeppurple-50 dark:bg-deeppurple-900/10 p-8 rounded-xl border border-primary/10 space-y-6">
+<div class="space-y-2">
+<h4 class="text-lg font-['Plus_Jakarta_Sans'] font-bold text-primary">جرب الإرسال عبر الواتساب</h4>
+<p class="text-sm text-on-surface-variant leading-relaxed">أدخل رقم جوالك لتصلك نسخة تجريبية حقيقية من الدعوة على هاتفك الآن.</p>
+</div>
+<div class="flex gap-4">
+<input class="flex-1 bg-white border border-outline-variant/30 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary" placeholder="05xxxxxxxx" type="tel"/>
+<button class="bg-primary text-white px-8 py-3 rounded-lg font-bold flex items-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-lg shadow-primary/30">
+                                انقر للتجربة
+                                <span class="material-symbols-outlined text-sm">send</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Invoice Section -->
+<section class="bg-surface-container-low rounded-2xl p-12 mt-12">
+<div class="max-w-3xl mx-auto space-y-10">
+<div class="text-center space-y-2">
+<h3 class="text-3xl font-['Plus_Jakarta_Sans'] font-extrabold">ملخص الطلب</h3>
+<p class="text-on-surface-variant">مراجعة نهائية قبل إتمام عملية الدفع</p>
+</div>
+<div class="space-y-4 border-t border-b border-outline-variant/20 py-8">
+<div class="flex justify-between items-center">
+<span class="text-on-surface-variant">تصميم القالب الأساسي (الخيار المختار)</span>
+<span class="font-bold">250.00 ر.س</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-on-surface-variant">خدمة إرسال الرسائل اللامحدودة (WhatsApp)</span>
+<span class="font-bold">150.00 ر.س</span>
+</div>
+<div class="flex justify-between items-center text-secondary">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">confirmation_number</span>
+                            خصم الحجز المبكر
+                        </span>
+<span class="font-bold">-50.00 ر.س</span>
+</div>
+</div>
+<div class="flex flex-col md:flex-row items-center justify-between gap-8 pt-4">
+<div class="text-center md:text-right">
+<p class="text-sm text-on-surface-variant">المجموع النهائي (شامل الضريبة)</p>
+<p class="text-5xl font-['Plus_Jakarta_Sans'] font-black text-primary mt-1">350.00 <span class="text-lg">ر.س</span></p>
+</div>
+<button class="w-full md:w-auto bg-gradient-to-br from-primary to-deeppurple-700 text-on-primary px-12 py-5 rounded-xl text-xl font-bold flex items-center justify-center gap-4 shadow-2xl shadow-primary/40 hover:opacity-90 transition-all active:scale-95">
+                        تأكيد الطلب والدفع
+                        <span class="material-symbols-outlined">payments</span>
+</button>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Footer Component (from COMPONENTS_8) -->
+<footer class="w-full py-12 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 subtle-tonal-contrast flat">
+<div class="w-full flex flex-col items-center space-y-4 text-center px-8 max-w-7xl mx-auto">
+<div class="mb-4">
+<p class="font-['Noto_Serif'] italic text-deeppurple-800 dark:text-deeppurple-300 text-2xl">Dawati Atelier</p>
+<p class="text-sm font-['Noto_Serif'] italic text-zinc-500 mt-2">© 2024 Dawati Digital Atelier. Crafted for Elegance.</p>
+</div>
+<div class="flex gap-8">
+<a class="text-sm text-zinc-500 hover:text-deeppurple-700 transition-colors" href="#">Privacy Policy</a>
+<a class="text-sm text-zinc-500 hover:text-deeppurple-700 transition-colors" href="#">Terms of Service</a>
+<a class="text-sm text-zinc-500 hover:text-deeppurple-700 transition-colors" href="#">Contact Support</a>
+</div>
+</div>
+</footer>
+<!-- BottomNavBar Component (from COMPONENTS_8) -->
+<div class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 h-20 pb-safe bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl rounded-t-3xl border-t border-zinc-100 dark:border-zinc-800 shadow-[0_-4px_20px_rgba(81,45,168,0.05)] tonal-layering-surface-container">
+<div class="flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-500 py-2 px-4 font-['Plus_Jakarta_Sans'] text-[10px] uppercase tracking-widest hover:text-deeppurple-500 active:scale-95 transition-all">
+<span class="material-symbols-outlined">home</span>
+<span>Home</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-deeppurple-600 text-white rounded-xl py-2 px-4 font-['Plus_Jakarta_Sans'] text-[10px] uppercase tracking-widest scale-110 duration-300 ease-out">
+<span class="material-symbols-outlined">edit_note</span>
+<span>Drafts</span>
+</div>
+<div class="flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-500 py-2 px-4 font-['Plus_Jakarta_Sans'] text-[10px] uppercase tracking-widest hover:text-deeppurple-500 active:scale-95 transition-all">
+<span class="material-symbols-outlined">event_available</span>
+<span>RSVPs</span>
+</div>
+<div class="flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-500 py-2 px-4 font-['Plus_Jakarta_Sans'] text-[10px] uppercase tracking-widest hover:text-deeppurple-500 active:scale-95 transition-all">
+<span class="material-symbols-outlined">person</span>
+<span>Account</span>
+</div>
+</div>
+<!-- WhatsApp Floating Button -->
+<button class="fixed bottom-24 md:bottom-12 right-8 w-16 h-16 bg-secondary text-white rounded-full flex items-center justify-center shadow-[0_10px_40px_rgba(0,109,47,0.3)] hover:scale-110 active:scale-95 transition-all z-40">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">chat</span>
+</button>
+</body></html>
