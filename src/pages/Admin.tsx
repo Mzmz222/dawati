@@ -16,7 +16,6 @@ import {
   MessageCircle,
   Loader2,
   Send,
-  Plus,
   Trash2,
   Bold,
   Italic,
@@ -57,6 +56,7 @@ const INVITATION_AVAILABLE_FIELDS: FieldConfig[] = [
   { id: 'date', label: 'تاريخ الحفل', x: 50, y: 55, fontSize: 18, fontFamily: 'Cairo', color: '#4a4a4a', bold: false, italic: false, enabled: false },
   { id: 'city', label: 'المدينة', x: 40, y: 65, fontSize: 16, fontFamily: 'Tajawal', color: '#4a4a4a', bold: false, italic: false, enabled: false },
   { id: 'district', label: 'الحي', x: 60, y: 65, fontSize: 16, fontFamily: 'Tajawal', color: '#4a4a4a', bold: false, italic: false, enabled: false },
+  { id: 'hallName', label: 'اسم القاعة', x: 50, y: 75, fontSize: 16, fontFamily: 'Cairo', color: '#4a4a4a', bold: true, italic: false, enabled: false },
 ];
 
 const BARCODE_AVAILABLE_FIELDS: FieldConfig[] = [
@@ -67,6 +67,7 @@ const BARCODE_AVAILABLE_FIELDS: FieldConfig[] = [
   { id: 'date', label: 'تاريخ الحفل', x: 50, y: 49, fontSize: 16, fontFamily: 'Cairo', color: '#4a4a4a', bold: false, italic: false, enabled: false },
   { id: 'city', label: 'المدينة', x: 40, y: 57, fontSize: 14, fontFamily: 'Tajawal', color: '#4a4a4a', bold: false, italic: false, enabled: false },
   { id: 'district', label: 'الحي', x: 60, y: 57, fontSize: 14, fontFamily: 'Tajawal', color: '#4a4a4a', bold: false, italic: false, enabled: false },
+  { id: 'hallName', label: 'اسم القاعة', x: 50, y: 65, fontSize: 14, fontFamily: 'Cairo', color: '#4a4a4a', bold: true, italic: false, enabled: false },
   { id: 'companions', label: 'عدد المرافقين', x: 50, y: 90, fontSize: 14, fontFamily: 'Cairo', color: '#333', bold: true, italic: false, enabled: false },
 ];
 
@@ -616,7 +617,16 @@ export default function Admin() {
                   <tr key={t.id} className="hover:bg-zinc-50/50 transition-colors">
                     <td className="px-8 py-5"><div className="font-bold">{t.name}</div><div className="text-xs text-zinc-400">{t.phone}</div></td>
                     <td className="px-8 py-5 text-sm text-zinc-600 max-w-md truncate">{t.message}</td>
-                    <td className="px-8 py-5 text-center"><button className="text-primary font-bold text-sm hover:underline">رد عبر واتساب</button></td>
+                    <td className="px-8 py-5 text-center">
+                      <a 
+                        href={`https://wa.me/${t.phone.startsWith('0') ? '966' + t.phone.slice(1) : t.phone}?text=${encodeURIComponent(`مرحباً ${t.name}، بخصوص استفسارك في منصة دعواتي: `)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary font-bold text-sm hover:underline"
+                      >
+                        رد عبر واتساب
+                      </a>
+                    </td>
                   </tr>
                 ))}
               </tbody>

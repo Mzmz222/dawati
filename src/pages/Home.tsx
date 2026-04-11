@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   QrCode as QrIcon, 
@@ -11,9 +11,15 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { getWhatsAppNumber } from '../lib/n8n';
 
 export default function Home() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [waNumber, setWaNumber] = useState('966500000000');
+
+  useEffect(() => {
+    getWhatsAppNumber().then(setWaNumber);
+  }, []);
 
   const faqs = [
     { q: "هل يمكنني تعديل البيانات بعد الشراء؟", a: "نعم، يمكنك تعديل كافة البيانات (التاريخ، الموقع، الوقت) في أي وقت وبشكل مجاني تماماً حتى بعد إرسال الدعوة." },
@@ -45,7 +51,9 @@ export default function Home() {
               <ArrowRight className="w-5 h-5" />
             </Link>
             <a 
-              href="https://wa.me/966500000000" 
+              href={`https://wa.me/${waNumber}`} 
+              target="_blank"
+              rel="noopener noreferrer"
               className="px-8 py-4 bg-white text-primary border border-primary/10 rounded-xl font-bold text-lg flex items-center gap-2 shadow-sm hover:bg-surface-container-low transition-colors"
             >
               <MessageCircle className="w-5 h-5" />

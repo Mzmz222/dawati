@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -39,6 +39,7 @@ const eventSchema = z.object({
   time: z.string().min(1, 'الوقت مطلوب'),
   city: z.string().min(1, 'المدينة مطلوبة'),
   district: z.string().min(1, 'الحي مطلوب'),
+  hallName: z.string().min(1, 'اسم القاعة مطلوب'),
   locationUrl: z.string().url('رابط غير صالح').optional().or(z.literal('')),
 });
 
@@ -54,8 +55,8 @@ type GuestFormData = z.infer<typeof guestSchema>;
 
 export default function Design() {
   const [phase, setPhase] = useState<'setup' | 'guests'>('setup');
-  const [selectedTemplate, setSelectedTemplate] = useState('royal_elegance');
-  const [customTemplateUrl, setCustomTemplateUrl] = useState<string | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const [templates, setTemplates] = useState<any[]>([]);
   const [previewType, setPreviewType] = useState<'invitation' | 'barcode'>('invitation');
   const [isPaid] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -89,12 +90,28 @@ export default function Design() {
     name: 'guests',
   });
 
+  useEffect(() => {
+    fetchTemplates();
+  }, []);
+
+  const fetchTemplates = async () => {
+    const { data } = await supabase.from('templates').select('*').order('created_at', { ascending: false });
+    if (data && data.length > 0) {
+      setTemplates(data);
+      setSelectedTemplate(data[0].id);
+    }
+  };
+
   const totalGuests = fields.length;
   const baseCost = 250;
   const extraGuestCost = 15;
   const totalCost = baseCost + (totalGuests > 10 ? (totalGuests - 10) * extraGuestCost : 0);
 
   const onSaveEvent = async (data: EventFormData) => {
+    if (!selectedTemplate) {
+      alert('يرجى اختيار قالب أولاً');
+      return;
+    }
     setIsLoading(true);
     try {
       const userStr = localStorage.getItem('dawati_user');
@@ -110,8 +127,9 @@ export default function Design() {
           time: data.time,
           city: data.city,
           district: data.district,
+          hall_name: data.hallName,
           location_url: data.locationUrl,
-          card_template_id: selectedTemplate === 'custom' ? 'custom' : selectedTemplate,
+          card_template_id: selectedTemplate,
           payment_status: 'unpaid'
         }])
         .select()
@@ -203,16 +221,13 @@ export default function Design() {
       if (error) throw error;
 
       if (action === 'send') {
-        const response = await fetch(import.meta.env.VITE_N8N_WEBHOOK_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            action: 'send_bulk_invites',
-            eventId: eventId,
-            guests: validGuests
-          }),
+        const result = await triggerN8N({ 
+          action: 'send_bulk_invites',
+          is_preview: false,
+          event_id: eventId,
+          guests: validGuests
         });
-        if (!response.ok) throw new Error('فشل إرسال الدعوات عبر النظام');
+        if (!result.success) throw new Error('فشل إرسال الدعوات عبر النظام');
         alert('تم إطلاق عملية إرسال الدعوات بنجاح!');
       } else {
         alert('تم حفظ الدعوات بنجاح في قسم (دعواتي). يمكنك إرسالها لاحقاً.');
@@ -273,7 +288,7 @@ export default function Design() {
                   />
                   {errors.brideName && <p className="text-xs text-error font-bold">{errors.brideName.message}</p>}
                 </div>
-                
+
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-on-surface-variant px-1">تاريخ الحفل</label>
                   <input
@@ -281,6 +296,7 @@ export default function Design() {
                     type="date"
                     className={cn("w-full bg-surface-container-low border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary/20", errors.date && "ring-2 ring-error")}
                   />
+                  {errors.date && <p className="text-xs text-error font-bold">{errors.date.message}</p>}
                 </div>
 
                 <div className="space-y-2">
@@ -290,6 +306,7 @@ export default function Design() {
                     type="time"
                     className={cn("w-full bg-surface-container-low border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary/20", errors.time && "ring-2 ring-error")}
                   />
+                  {errors.time && <p className="text-xs text-error font-bold">{errors.time.message}</p>}
                 </div>
 
                 <div className="space-y-2">
@@ -299,6 +316,7 @@ export default function Design() {
                     placeholder="الرياض"
                     className={cn("w-full bg-surface-container-low border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary/20", errors.city && "ring-2 ring-error")}
                   />
+                  {errors.city && <p className="text-xs text-error font-bold">{errors.city.message}</p>}
                 </div>
 
                 <div className="space-y-2">
@@ -308,6 +326,20 @@ export default function Design() {
                     placeholder="حي الملقا"
                     className={cn("w-full bg-surface-container-low border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary/20", errors.district && "ring-2 ring-error")}
                   />
+                  {errors.district && <p className="text-xs text-error font-bold">{errors.district.message}</p>}
+                </div>
+
+                <div className="md:col-span-2 space-y-2">
+                  <label className="text-sm font-bold text-on-surface-variant flex items-center gap-2 px-1">
+                    <MapPin className="w-4 h-4 text-primary" />
+                    اسم القاعة
+                  </label>
+                  <input 
+                    {...register('hallName')}
+                    placeholder="مثال: قاعة الفخامة"
+                    className={cn("w-full bg-surface-container-low border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary/20", errors.hallName && "ring-2 ring-error")}
+                  />
+                  {errors.hallName && <p className="text-xs text-error font-bold">{errors.hallName.message}</p>}
                 </div>
 
                 <div className="md:col-span-2 space-y-2">
@@ -317,64 +349,46 @@ export default function Design() {
                     placeholder="https://maps.app.goo.gl/..."
                     className={cn("w-full bg-surface-container-low border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary/20", errors.locationUrl && "ring-2 ring-error")}
                   />
+                  {errors.locationUrl && <p className="text-xs text-error font-bold">{errors.locationUrl.message}</p>}
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <h3 className="text-xl font-bold text-on-surface font-headline">اختر قالب الدعوة والباركود</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  <label className={cn(
-                    "relative aspect-[3/4] cursor-pointer rounded-2xl overflow-hidden border-4 transition-all flex flex-col items-center justify-center bg-surface-container-low",
-                    selectedTemplate === 'custom' ? "border-primary shadow-xl" : "border-outline-variant/20"
-                  )}>
-                    <input 
-                      type="file" 
-                      className="hidden" 
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const url = URL.createObjectURL(file);
-                          setCustomTemplateUrl(url);
-                          setSelectedTemplate('custom');
-                        }
-                      }}
-                    />
-                    {customTemplateUrl ? (
-                      <img src={customTemplateUrl} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="text-center p-4">
-                        <Plus className="w-8 h-8 mx-auto text-primary mb-2" />
-                        <span className="text-xs font-bold text-primary">رفع من الاستوديو</span>
-                      </div>
-                    )}
-                  </label>
-
-                  {['royal_elegance', 'modern_chic', 'classic_gold'].map((temp) => (
+              <div className="space-y-4 pt-4">
+                <h3 className="text-xl font-bold text-on-surface font-headline">اختر قالب الدعوة</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
+                  {templates.map((temp) => (
                     <div 
-                      key={temp}
-                      onClick={() => setSelectedTemplate(temp)}
+                      key={temp.id}
+                      onClick={() => setSelectedTemplate(temp.id)}
                       className={cn(
-                        "relative aspect-[3/4] cursor-pointer rounded-2xl overflow-hidden border-4 transition-all",
-                        selectedTemplate === temp ? "border-primary scale-105 shadow-xl ring-4 ring-primary/10" : "border-transparent opacity-60"
+                        "relative aspect-[3/4] cursor-pointer rounded-2xl overflow-hidden border-4 transition-all group",
+                        selectedTemplate === temp.id ? "border-primary scale-105 shadow-xl ring-4 ring-primary/10" : "border-outline-variant/10 opacity-70 hover:opacity-100"
                       )}
                     >
                       <img 
-                        src={`https://images.unsplash.com/photo-1621342621453-9d0d343c1fcb?q=80&w=300`} 
-                        alt={temp}
+                        src={temp.preview_image_url || temp.invitation_image_url || 'https://images.unsplash.com/photo-1621342621453-9d0d343c1fcb?q=80&w=300'} 
+                        alt={temp.name}
                         className="w-full h-full object-cover"
                       />
-                      {selectedTemplate === temp && (
-                        <div className="absolute inset-0 bg-primary/20 flex items-center justify-center border-2 border-primary">
-                          <CheckCircle2 className="w-8 h-8 text-white" />
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 p-3">
+                        <p className="text-white text-[10px] font-bold text-center truncate">{temp.name}</p>
+                      </div>
+                      {selectedTemplate === temp.id && (
+                        <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                          <CheckCircle2 className="w-8 h-8 text-white drop-shadow-lg" />
                         </div>
                       )}
                     </div>
                   ))}
+                  {templates.length === 0 && (
+                    <div className="col-span-full py-12 text-center bg-zinc-50 rounded-2xl border-2 border-dashed border-zinc-200">
+                      <p className="text-zinc-400 text-sm">سيتم توفير القوالب قريباً</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-4 pt-6">
                 <button
                   type="submit"
                   disabled={isLoading}
@@ -419,7 +433,7 @@ export default function Design() {
                 </button>
               </div>
 
-              <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+              <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar text-right">
                 {fields.map((field, index) => (
                   <div key={field.id} className="p-6 bg-surface-container-low rounded-2xl space-y-4 relative group">
                     <button 
@@ -429,11 +443,11 @@ export default function Design() {
                       <Trash2 className="w-5 h-5" />
                     </button>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-right">
                       <input
                         {...registerGuest(`guests.${index}.name` as const)}
                         placeholder="اسم الضيف"
-                        className="bg-white border-none rounded-xl p-3 focus:ring-2 focus:ring-primary/20 font-body"
+                        className="bg-white border-none rounded-xl p-3 focus:ring-2 focus:ring-primary/20 font-body text-right"
                       />
                       <input
                         {...registerGuest(`guests.${index}.phone` as const)}
@@ -461,7 +475,7 @@ export default function Design() {
                       </div>
 
                       {watchGuest(`guests.${index}.gender`) === 'female' && (
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 justify-end">
                           <label className="text-xs font-bold text-on-surface-variant">المرافقين:</label>
                           <select 
                             {...registerGuest(`guests.${index}.companionsCount` as const, { valueAsNumber: true })}
@@ -527,7 +541,7 @@ export default function Design() {
             </div>
 
             {/* Live Preview Card */}
-            <div className="bg-surface-container-lowest p-4 rounded-[2.5rem] shadow-2xl border border-outline-variant/10 relative overflow-hidden group">
+            <div className="bg-surface-container-lowest p-4 rounded-[3rem] shadow-2xl border border-outline-variant/10 relative overflow-hidden group">
               {/* Luxury Watermark */}
               <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none overflow-hidden">
                 <div className="text-surface-container-highest/60 text-7xl font-black uppercase tracking-[1em] -rotate-45 whitespace-nowrap opacity-20 select-none">
@@ -535,7 +549,7 @@ export default function Design() {
                 </div>
               </div>
 
-              <div className="relative aspect-[3/4.5] rounded-3xl overflow-hidden bg-white shadow-inner flex flex-col items-center justify-center text-center p-12 border border-primary/5">
+              <div className="relative aspect-[3/4.5] rounded-[2.5rem] overflow-hidden bg-white shadow-inner flex flex-col items-center justify-center text-center p-12 border border-primary/5">
                 {/* Texture background */}
                 <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/cardboard.png')]"></div>
                 
@@ -571,7 +585,7 @@ export default function Design() {
                       </div>
                       <div className="flex items-center justify-center gap-3">
                         <MapPin className="w-4 h-4 opacity-70" />
-                        {eventData.city || 'المدينة'} - {eventData.district || 'الحي'}
+                        {eventData.hallName || 'اسم القاعة'}، {eventData.city || 'المدينة'} - {eventData.district || 'الحي'}
                       </div>
                     </div>
                   </div>
@@ -623,7 +637,7 @@ export default function Design() {
               <h4 className="text-lg font-bold text-primary font-headline">ملخص التكاليف</h4>
               <div className="space-y-3 font-body">
                 <div className="flex justify-between text-sm">
-                  <span className="text-on-surface-variant text-muted-foreground">التصميم والخدمة الأساسية (أول ١٠ مدعوين)</span>
+                  <span className="text-on-surface-variant">التصميم والخدمة الأساسية (أول ١٠ مدعوين)</span>
                   <span className="font-bold">{baseCost} ر.س</span>
                 </div>
                 {totalGuests > 10 && (
