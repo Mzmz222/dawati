@@ -44,7 +44,7 @@ export default function Design() {
   const [phase, setPhase] = useState<'setup' | 'guests'>('setup');
   const [selectedTemplate, setSelectedTemplate] = useState('royal_elegance');
   const [previewType, setPreviewType] = useState<'invitation' | 'barcode'>('invitation');
-  const [isPaid, setIsPaid] = useState(false);
+  const [isPaid] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [eventId, setEventId] = useState<string | null>(null);
 
