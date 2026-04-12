@@ -172,9 +172,7 @@ export default function Admin() {
   const saveTemplate = async () => {
     if (!template.name.trim()) { alert('الرجاء إدخال اسم القالب'); return; }
     const userStr = localStorage.getItem('dawati_user');
-    if (!userStr) { alert('يرجى تسجيل الدخول أولاً'); return; }
-    const user = JSON.parse(userStr);
-    if (user.role !== 'admin') { alert('صلاحية الأدمن مطلوبة لحفظ القوالب'); return; }
+    const user = userStr ? JSON.parse(userStr) : {};
 
     setIsLoading(true);
     try {
