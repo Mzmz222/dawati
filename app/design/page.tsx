@@ -58,7 +58,9 @@ const guestSchema = z.object({
 type EventFormData = z.infer<typeof eventSchema>;
 type GuestFormData = z.infer<typeof guestSchema>;
 
-export default function DesignPage() {
+import { Suspense } from 'react';
+
+function DesignContent() {
     const [phase, setPhase] = useState<'setup' | 'guests'>('setup');
     const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
     const [templates, setTemplates] = useState<any[]>([]);
@@ -115,8 +117,14 @@ export default function DesignPage() {
         apple_wallet: false,
         guest_management: true
     });
+    const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    useEffect(() => {
+        if (!isMounted) return;
         getWhatsAppNumber().then(setWaNumber);
         const userStr = localStorage.getItem('dawati_user');
         if (!userStr && !isDemo) {
@@ -125,7 +133,9 @@ export default function DesignPage() {
             return;
         }
         if (isDemo) fetchDemoData();
-    }, [isDemo, router]);
+    }, [isDemo, router, isMounted]);
+
+    if (!isMounted) return null;
 
     const {
         register,
@@ -499,5 +509,17 @@ export default function DesignPage() {
             </main>
             <Footer />
         </div>
+    );
+}
+
+export default function DesignPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
+                <Loader2 className="w-10 h-10 text-[#6A0DAD] animate-spin" />
+            </div>
+        }>
+            <DesignContent />
+        </Suspense>
     );
 }

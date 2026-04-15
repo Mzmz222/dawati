@@ -16,11 +16,10 @@ export interface N8NPayload {
   };
 }
 
-const N8N_WEBHOOK_URL = (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL : (import.meta as any).env?.VITE_N8N_WEBHOOK_URL) || 'http://localhost:5678/webhook-test/dawati';
-const SECRET_TOKEN = (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_N8N_SECRET : (import.meta as any).env?.VITE_N8N_SECRET_TOKEN) || 'dawati_secret_2024';
+const N8N_WEBHOOK_URL = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL || 'http://localhost:5678/webhook-test/dawati';
+const SECRET_TOKEN = process.env.NEXT_PUBLIC_N8N_SECRET || 'dawati_secret_2024';
 
 export const triggerN8N = async (payload: any) => {
-  // Add timestamp for unique processing
   const enrichedPayload = {
     ...payload,
     timestamp: new Date().toISOString()
@@ -31,7 +30,7 @@ export const triggerN8N = async (payload: any) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Dawati-Secret': SECRET_TOKEN || '',
+        'X-Dawati-Secret': SECRET_TOKEN,
       },
       body: JSON.stringify(enrichedPayload),
     });
@@ -47,9 +46,6 @@ export const triggerN8N = async (payload: any) => {
   }
 };
 
-/**
- * Fetches the global WhatsApp number from database
- */
 export const getWhatsAppNumber = async (): Promise<string> => {
   try {
     const { data, error } = await supabase
@@ -58,7 +54,7 @@ export const getWhatsAppNumber = async (): Promise<string> => {
       .eq('key', 'whatsapp_number')
       .single();
 
-    if (error || !data) return '966500000000'; // Fallback
+    if (error || !data) return '966500000000';
     return data.value;
   } catch {
     return '966500000000';

@@ -43,10 +43,15 @@ export default function AdminPage() {
     const [templates, setTemplates] = useState<any[]>([]);
     const [tickets, setTickets] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
-        if (isAuthenticated) fetchAdminData();
-    }, [isAuthenticated, activeTab]);
+        setIsMounted(true);
+    }, []);
+
+    useEffect(() => {
+        if (isMounted && isAuthenticated) fetchAdminData();
+    }, [isAuthenticated, activeTab, isMounted]);
 
     const fetchAdminData = async () => {
         setIsLoading(true);
@@ -157,6 +162,8 @@ export default function AdminPage() {
         if (password === '4646') setIsAuthenticated(true);
         else alert('كلمة مرور خاطئة');
     };
+
+    if (!isMounted) return null;
 
     if (!isAuthenticated) {
         return (
