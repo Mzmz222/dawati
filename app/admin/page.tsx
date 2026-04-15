@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
@@ -16,20 +18,23 @@ import {
     MessageCircle,
     Loader2,
     Send,
-    Trash2,
-    ImageIcon,
     Check,
     Eye,
-    AlertCircle
+    AlertCircle,
+    Upload,
+    Heart,
+    Image as ImageIcon
 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import { triggerN8N } from '@/lib/n8n';
 
 export default function AdminPage() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [password, setPassword] = useState('');
     const [stats, setStats] = useState({ revenue: 0, customers: 0, events: 0, pendingOrders: 0 });
     const [activeTab, setActiveTab] = useState<'orders' | 'users' | 'invitations' | 'templates' | 'tickets' | 'settings'>('orders');
+    const [settings, setSettings] = useState<any>({});
 
     // Data States
     const [orders, setOrders] = useState<any[]>([]);
@@ -82,19 +87,63 @@ export default function AdminPage() {
                 const { data } = await supabase.from('support_tickets').select('*').order('created_at', { ascending: false });
                 setTickets(data || []);
             }
+            if (activeTab === 'settings') {
+                const { data } = await supabase.from('site_settings').select('*');
+                const settingsMap = data?.reduce((acc, curr) => ({ ...acc, [curr.key]: curr.value }), {});
+                setSettings(settingsMap || {});
+            }
+        } catch (err) {
+            console.error(err);
         } finally {
             setIsLoading(false);
         }
     };
 
-    const handleApproveOrder = async (orderId: string) => {
+    const handleApproveOrder = async (order: any) => {
         setIsLoading(true);
-        const { error } = await supabase.from('orders').update({ status: 'paid' }).eq('id', orderId);
-        if (!error) {
-            alert('تم تأكيد الدفع بنجاح');
+        try {
+            // Update Order
+            const { error: orderError } = await supabase.from('orders').update({ status: 'paid' }).eq('id', order.id);
+            if (orderError) throw orderError;
+
+            // Update Event
+            const { error: eventError } = await supabase.from('events').update({ payment_status: 'paid' }).eq('id', order.event_id);
+            if (eventError) throw eventError;
+
+            alert('تم تفعيل الطلب والمناسبة بنجاح');
             fetchAdminData();
+        } catch (err: any) {
+            alert('خطأ في التفعيل: ' + err.message);
+        } finally {
+            setIsLoading(false);
         }
-        setIsLoading(false);
+    };
+
+    const handleUploadOrderMedia = async (orderId: string, file: File, field: 'final_media_url' | 'empty_qr_url') => {
+        setIsLoading(true);
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `order_${orderId}_${field}_${Math.random()}.${fileExt}`;
+            const { error: uploadError } = await supabase.storage.from('templates-images').upload(fileName, file);
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl } } = supabase.storage.from('templates-images').getPublicUrl(fileName);
+            const { error: updateError } = await supabase.from('orders').update({ [field]: publicUrl }).eq('id', orderId);
+            if (updateError) throw updateError;
+
+            alert('تم رفع الملف بنجاح');
+            fetchAdminData();
+        } catch (err: any) {
+            alert('حدث خطأ أثناء الرفع: ' + err.message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const updateSetting = async (key: string, value: string) => {
+        const { error } = await supabase.from('site_settings').upsert({ key, value }, { onConflict: 'key' });
+        if (error) alert('خطأ في حفظ الإعدادات');
+        else alert('تم حفظ الإعداد بنجاح');
     };
 
     const toggleEventStatus = async (eventId: string, currentStatus: string) => {
@@ -211,23 +260,35 @@ export default function AdminPage() {
                                                     <tr key={o.id} className="border-b border-zinc-50 hover:bg-zinc-50 transition-all">
                                                         <td className="py-4">
                                                             <p className="font-bold">{o.users?.full_name}</p>
-                                                            <p className="text-xs text-zinc-400">{o.users?.phone}</p>
+                                                            <div className="flex gap-2 text-[10px] mt-1">
+                                                                <span className="bg-zinc-100 px-1.5 py-0.5 rounded">{o.guests_package} مدعو</span>
+                                                                <span className={cn("px-1.5 py-0.5 rounded", o.media_type === 'video' ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700")}>
+                                                                    {o.media_type === 'video' ? 'فيديو' : 'صورة'}
+                                                                </span>
+                                                            </div>
                                                         </td>
                                                         <td className="py-4 font-black">
                                                             {o.amount} ر.س
                                                         </td>
-                                                        <td className="py-4 text-center">
-                                                            <span className={cn(
-                                                                "px-3 py-1 rounded-full text-[10px] font-bold",
-                                                                o.status === 'paid' ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
-                                                            )}>
-                                                                {o.status === 'paid' ? 'تم الدفع' : 'قيد الانتظار'}
-                                                            </span>
+                                                        <td className="py-2 text-[10px] space-y-1">
+                                                            {/* Media Uploads */}
+                                                            <div className="flex flex-col gap-1 items-center">
+                                                                <label className="cursor-pointer bg-zinc-100 hover:bg-zinc-200 p-1 px-2 rounded-lg flex items-center gap-1">
+                                                                    <Upload className="w-3 h-3" /> {o.final_media_url ? 'تغيير الوسيط' : 'رفع الوسيط'}
+                                                                    <input type="file" className="hidden" onChange={(e) => e.target.files?.[0] && handleUploadOrderMedia(o.id, e.target.files[0], 'final_media_url')} />
+                                                                </label>
+                                                                <label className="cursor-pointer bg-zinc-100 hover:bg-zinc-200 p-1 px-2 rounded-lg flex items-center gap-1">
+                                                                    <QrCode className="w-3 h-3" /> {o.empty_qr_url ? 'تغيير QR' : 'رفع QR فاضي'}
+                                                                    <input type="file" className="hidden" onChange={(e) => e.target.files?.[0] && handleUploadOrderMedia(o.id, e.target.files[0], 'empty_qr_url')} />
+                                                                </label>
+                                                            </div>
                                                         </td>
                                                         <td className="py-4 text-center">
-                                                            {o.status !== 'paid' && (
+                                                            {o.status === 'paid' ? (
+                                                                <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-[10px] font-bold">تم الدفع</span>
+                                                            ) : (
                                                                 <button
-                                                                    onClick={() => handleApproveOrder(o.id)}
+                                                                    onClick={() => handleApproveOrder(o)}
                                                                     className="bg-emerald-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-700"
                                                                 >
                                                                     تفعيل
@@ -360,6 +421,30 @@ export default function AdminPage() {
                                                 </div>
                                             </div>
                                         ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'settings' && (
+                                <div className="space-y-8 max-w-2xl">
+                                    <h4 className="text-xl font-bold flex items-center gap-2"><SettingsIcon className="w-5 h-5" /> إعدادات المنصة</h4>
+                                    
+                                    <div className="space-y-4 bg-zinc-50 p-6 rounded-3xl border border-zinc-100">
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-bold text-zinc-600">القالب التجريبي (Demo Template ID)</label>
+                                            <div className="flex gap-2">
+                                                <select 
+                                                    value={settings.demo_template_id || ''} 
+                                                    onChange={(e) => updateSetting('demo_template_id', e.target.value)}
+                                                    className="flex-1 bg-white border-zinc-200 rounded-xl p-3 text-sm"
+                                                >
+                                                    <option value="">اختر قالب...</option>
+                                                    {templates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                                                </select>
+                                                <button onClick={() => alert('تم الحفظ تلقائياً')} className="bg-[#6A0DAD] text-white px-4 py-2 rounded-xl text-xs font-bold">حفظ</button>
+                                            </div>
+                                            <p className="text-[10px] text-zinc-400 italic">هذا القالب هو ما يظهر للزوار عند الضغط على "جرب العرض" في الصفحة الرئيسية.</p>
+                                        </div>
                                     </div>
                                 </div>
                             )}

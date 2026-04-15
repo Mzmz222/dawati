@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
             .webp({ quality: 90 })
             .toBuffer();
 
-        return new NextResponse(finalImage, {
+        return new Response(new Uint8Array(finalImage), {
             headers: {
                 'Content-Type': 'image/webp',
                 'Cache-Control': 'public, max-age=3600',

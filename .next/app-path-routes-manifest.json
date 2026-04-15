@@ -1,0 +1,15 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/admin/page": "/admin",
+  "/api/generate-image/route": "/api/generate-image",
+  "/api/n8n/route": "/api/n8n",
+  "/confirm-attendance/[id]/page": "/confirm-attendance/[id]",
+  "/design/page": "/design",
+  "/login/page": "/login",
+  "/my-events/page": "/my-events",
+  "/page": "/",
+  "/rsvp/accept/[guest_id]/page": "/rsvp/accept/[guest_id]",
+  "/rsvp/decline/[guest_id]/page": "/rsvp/decline/[guest_id]",
+  "/scanner/page": "/scanner"
+}

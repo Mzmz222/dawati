@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { supabase } from '@/lib/supabase';
+import { cn } from '@/lib/utils';
 import { CheckCircle2, XCircle, Loader2, Camera, UserCheck } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';

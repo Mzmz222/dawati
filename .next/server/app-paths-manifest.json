@@ -1,0 +1,15 @@
+{
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/admin/page": "app/admin/page.js",
+  "/api/generate-image/route": "app/api/generate-image/route.js",
+  "/api/n8n/route": "app/api/n8n/route.js",
+  "/confirm-attendance/[id]/page": "app/confirm-attendance/[id]/page.js",
+  "/design/page": "app/design/page.js",
+  "/login/page": "app/login/page.js",
+  "/my-events/page": "app/my-events/page.js",
+  "/page": "app/page.js",
+  "/rsvp/accept/[guest_id]/page": "app/rsvp/accept/[guest_id]/page.js",
+  "/rsvp/decline/[guest_id]/page": "app/rsvp/decline/[guest_id]/page.js",
+  "/scanner/page": "app/scanner/page.js"
+}

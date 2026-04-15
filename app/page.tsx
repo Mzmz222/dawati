@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
@@ -9,17 +11,53 @@ import {
     BookOpen,
     Users,
     MessageCircle,
-    ArrowRight,
-    ChevronDown
+    ChevronDown,
+    Loader2,
+    Phone,
+    ArrowRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getWhatsAppNumber } from '@/lib/n8n';
+import { getWhatsAppNumber, triggerN8N } from '@/lib/n8n';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 
 export default function Home() {
     const [openFaq, setOpenFaq] = useState<number | null>(null);
     const [waNumber, setWaNumber] = useState('966500000000');
+    const [demoPhone, setDemoPhone] = useState('');
+    const [isDemoLoading, setIsDemoLoading] = useState(false);
+
+    const handleSendDemo = async () => {
+        if (!/^05\d{8}$/.test(demoPhone)) {
+            alert('يرجى إدخال رقم جوال صحيح (05xxxxxxxx)');
+            return;
+        }
+        setIsDemoLoading(true);
+        try {
+            const result = await triggerN8N({
+                action: 'send_preview',
+                is_preview: true,
+                customer: {
+                    name: 'زائر تجريبي',
+                    phone: demoPhone
+                },
+                images: {
+                    watermarked: 'https://vohlymyegztabzgikbqv.supabase.co/storage/v1/object/public/templates-images/demo-preview.jpg',
+                    original: 'https://vohlymyegztabzgikbqv.supabase.co/storage/v1/object/public/templates-images/demo-preview.jpg'
+                }
+            });
+            if (result.success) {
+                alert('تم إرسال الرسالة التجريبية لهاتفك بنجاح!');
+                setDemoPhone('');
+            } else {
+                throw new Error(result.error || 'فشل الإرسال');
+            }
+        } catch (err: any) {
+            alert('حدث خطأ أثناء الإرسال: ' + err.message);
+        } finally {
+            setIsDemoLoading(false);
+        }
+    };
 
     useEffect(() => {
         getWhatsAppNumber().then(setWaNumber);
@@ -71,6 +109,39 @@ export default function Home() {
                     {/* Decorative Orbs */}
                     <div className="absolute top-0 -left-20 w-[500px] h-[500px] bg-[#6A0DAD]/5 rounded-full blur-[120px] -z-10"></div>
                     <div className="absolute bottom-0 -right-20 w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-[120px] -z-10"></div>
+                </section>
+
+                {/* Demo Message Section */}
+                <section className="bg-white py-16 border-y border-zinc-100">
+                    <div className="max-w-4xl mx-auto px-6 text-center">
+                        <div className="bg-gradient-to-br from-[#6A0DAD]/5 to-amber-500/5 p-12 rounded-[2.5rem] border border-[#6A0DAD]/10 space-y-8">
+                            <div className="space-y-4">
+                                <h3 className="text-3xl font-black text-primary font-headline">جرب الرسالة التجريبية (مجاناً)</h3>
+                                <p className="text-zinc-500 font-body">أدخل رقم جوالك لتصلك عينة من الدعوة الإلكترونية عبر واتساب الآن.</p>
+                            </div>
+                            <div className="flex flex-col md:flex-row gap-4 max-w-lg mx-auto">
+                                <div className="flex-1 relative">
+                                    <Phone className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-300" />
+                                    <input 
+                                        type="text" 
+                                        value={demoPhone}
+                                        onChange={(e) => setDemoPhone(e.target.value)}
+                                        placeholder="05xxxxxxxx"
+                                        className="w-full bg-white border-2 border-zinc-100 rounded-2xl py-4 pr-12 pl-4 focus:ring-2 focus:ring-[#6A0DAD]/20 transition-all font-body text-right dir-ltr"
+                                    />
+                                </div>
+                                <button 
+                                    onClick={handleSendDemo}
+                                    disabled={isDemoLoading}
+                                    className="px-8 py-4 bg-[#6A0DAD] text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-[#5a0b94] transition-colors shadow-lg shadow-[#6A0DAD]/20 disabled:opacity-50"
+                                >
+                                    {isDemoLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <MessageCircle className="w-5 h-5" />}
+                                    أرسل لي التجربة
+                                </button>
+                            </div>
+                            <p className="text-[10px] text-zinc-400 font-body">سيتم إرسال رسالة واحدة فقط لغرض التجربة. خصوصيتك محفوظة.</p>
+                        </div>
+                    </div>
                 </section>
 
                 {/* Features Section */}

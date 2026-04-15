@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import { useState, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,20 +18,23 @@ import {
     CheckCircle2,
     Loader2,
     QrCode,
-    Users
+    Users,
+    History,
+    Settings,
+    MessageCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { triggerN8N, getWhatsAppNumber } from '@/lib/n8n';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { AlertCircle } from 'lucide-react'; // Adding missing import reported in previous view
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import Image from 'next/image';
 import FeatureSwitcher from '@/components/ui/FeatureSwitcher';
 
 // Constants
-const BASE_TICKET_PRICE = 250;
-const EXTRA_GUEST_PRICE = 15;
-const INCLUDED_GUESTS_COUNT = 10;
+// Tiered pricing logic is handled below
 
 // Schemas
 const eventSchema = z.object({
@@ -58,9 +63,52 @@ export default function DesignPage() {
     const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
     const [templates, setTemplates] = useState<any[]>([]);
     const [previewType, setPreviewType] = useState<'invitation' | 'barcode'>('invitation');
-    const [isPaid] = useState(false);
+    const [isPaid, setIsPaid] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [eventId, setEventId] = useState<string | null>(null);
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const isDemo = searchParams.get('demo') === 'true';
+    const [guestsPackage, setGuestsPackage] = useState(10);
+    const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
+    const [waNumber, setWaNumber] = useState('966500000000');
+
+    // Pricing Logic
+    const getPackagePrice = (pkg: number) => {
+        if (pkg <= 50) return 200;
+        if (pkg <= 90) return 300;
+        if (pkg <= 150) return 400;
+        if (pkg <= 190) return 500;
+        if (pkg <= 250) return 600;
+        if (pkg <= 290) return 700;
+        if (pkg <= 350) return 800;
+        if (pkg <= 390) return 900;
+        if (pkg <= 450) return 1000;
+        return 1100;
+    };
+
+    const totalPrice = getPackagePrice(guestsPackage) + (mediaType === 'video' ? 50 : 0);
+
+    const fetchDemoData = async () => {
+        try {
+            const { data: setting } = await supabase.from('site_settings').select('value').eq('key', 'demo_template_id').single();
+            if (setting?.value) {
+                const { data: temp } = await supabase.from('templates').select('*').eq('id', setting.value).single();
+                if (temp) setSelectedTemplate(temp);
+                reset({
+                    groomName: 'فهد',
+                    brideName: 'سارة',
+                    date: new Date().toISOString().split('T')[0],
+                    time: '20:00',
+                    city: 'الرياض',
+                    district: 'الملقا',
+                    hallName: 'قاعة الفخامة',
+                    locationUrl: 'https://maps.google.com'
+                });
+                setIsPaid(false);
+            }
+        } catch (err) { console.error(err); }
+    };
     const [features, setFeatures] = useState({
         reminders: false,
         thank_you: false,
@@ -68,10 +116,22 @@ export default function DesignPage() {
         guest_management: true
     });
 
+    useEffect(() => {
+        getWhatsAppNumber().then(setWaNumber);
+        const userStr = localStorage.getItem('dawati_user');
+        if (!userStr && !isDemo) {
+            alert('يرجى تسجيل الدخول أولاً لتتمكن من التصميم');
+            router.push('/login?redirect=/design');
+            return;
+        }
+        if (isDemo) fetchDemoData();
+    }, [isDemo, router]);
+
     const {
         register,
         handleSubmit,
         watch,
+        reset,
         formState: { errors },
     } = useForm<EventFormData>({
         resolver: zodResolver(eventSchema),
@@ -110,9 +170,7 @@ export default function DesignPage() {
 
     // Pricing Calculation
     const guestCount = fields.length;
-    const extraGuests = Math.max(0, guestCount - INCLUDED_GUESTS_COUNT);
-    const featuresPrice = (features.reminders ? 50 : 0) + (features.thank_you ? 50 : 0) + (features.apple_wallet ? 30 : 0);
-    const totalPrice = BASE_TICKET_PRICE + (extraGuests * EXTRA_GUEST_PRICE) + featuresPrice;
+    // Tiered pricing used from guestsPackage instead of guestCount for phase 1 flow
 
     const onSaveEvent = async (data: EventFormData) => {
         if (!selectedTemplate) {
@@ -237,19 +295,50 @@ export default function DesignPage() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <label className="text-sm font-bold text-zinc-600">اسم العريس</label>
-                                        <input {...register('groomName')} placeholder="فهد" className="w-full bg-zinc-50 border-none rounded-xl p-3 focus:ring-2 focus:ring-primary/20" />
+                                        <input {...register('groomName')} disabled={isDemo} placeholder="فهد" className="w-full bg-zinc-50 border-none rounded-xl p-3 focus:ring-2 focus:ring-primary/20 disabled:opacity-60" />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-sm font-bold text-zinc-600">اسم العروس</label>
-                                        <input {...register('brideName')} placeholder="سارة" className="w-full bg-zinc-50 border-none rounded-xl p-3 focus:ring-2 focus:ring-primary/20" />
+                                        <input {...register('brideName')} disabled={isDemo} placeholder="سارة" className="w-full bg-zinc-50 border-none rounded-xl p-3 focus:ring-2 focus:ring-primary/20 disabled:opacity-60" />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-sm font-bold text-zinc-600">تاريخ الحفل</label>
-                                        <input {...register('date')} type="date" className="w-full bg-zinc-50 border-none rounded-xl p-3 focus:ring-2 focus:ring-primary/20" />
+                                        <input {...register('date')} disabled={isDemo} type="date" className="w-full bg-zinc-50 border-none rounded-xl p-3 focus:ring-2 focus:ring-primary/20 disabled:opacity-60" />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-sm font-bold text-zinc-600">وقت الحفل</label>
-                                        <input {...register('time')} type="time" className="w-full bg-zinc-50 border-none rounded-xl p-3 focus:ring-2 focus:ring-primary/20" />
+                                        <input {...register('time')} disabled={isDemo} type="time" className="w-full bg-zinc-50 border-none rounded-xl p-3 focus:ring-2 focus:ring-primary/20 disabled:opacity-60" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-zinc-600">المدينة</label>
+                                        <input {...register('city')} disabled={isDemo} placeholder="الرياض" className="w-full bg-zinc-50 border-none rounded-xl p-3 focus:ring-2 focus:ring-primary/20 disabled:opacity-60" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-zinc-600">الحي</label>
+                                        <input {...register('district')} disabled={isDemo} placeholder="حي الملقا" className="w-full bg-zinc-50 border-none rounded-xl p-3 focus:ring-2 focus:ring-primary/20 disabled:opacity-60" />
+                                    </div>
+                                    <div className="md:col-span-2 space-y-2">
+                                        <label className="text-sm font-bold text-zinc-600">اسم القاعة</label>
+                                        <input {...register('hallName')} disabled={isDemo} placeholder="قاعة الفخامة" className="w-full bg-zinc-50 border-none rounded-xl p-3 focus:ring-2 focus:ring-primary/20 disabled:opacity-60" />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-6 pt-4 border-t border-zinc-100">
+                                    <h3 className="text-xl font-bold font-headline">إعدادات الطلب</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-bold text-zinc-600">عدد المدعوين</label>
+                                            <select value={guestsPackage} onChange={(e) => setGuestsPackage(Number(e.target.value))} disabled={isDemo} className="w-full bg-zinc-50 border-none rounded-xl p-3 focus:ring-2 focus:ring-primary/20 disabled:opacity-60">
+                                                {[...Array(50)].map((_, i) => <option key={i} value={(i + 1) * 10}>{(i + 1) * 10} مدعو</option>)}
+                                            </select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-bold text-zinc-600">نوع الدعوة</label>
+                                            <div className="flex bg-zinc-50 p-1 rounded-xl">
+                                                <button type="button" onClick={() => !isDemo && setMediaType('image')} className={cn("flex-1 py-2 rounded-lg font-bold text-sm", mediaType === 'image' ? "bg-white shadow text-primary" : "text-zinc-400")}>صورة</button>
+                                                <button type="button" onClick={() => !isDemo && setMediaType('video')} className={cn("flex-1 py-2 rounded-lg font-bold text-sm", mediaType === 'video' ? "bg-white shadow text-primary" : "text-zinc-400")}>فيديو (+50)</button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -259,18 +348,19 @@ export default function DesignPage() {
                                         {templates.map(t => (
                                             <div
                                                 key={t.id}
-                                                onClick={() => setSelectedTemplate(t)}
                                                 className={cn(
                                                     "aspect-[3/4] rounded-xl overflow-hidden cursor-pointer border-4 transition-all",
-                                                    selectedTemplate?.id === t.id ? "border-[#6A0DAD] shadow-lg" : "border-transparent opacity-60"
+                                                    selectedTemplate?.id === t.id ? "border-[#6A0DAD] shadow-lg" : "border-transparent opacity-60",
+                                                    isDemo && "cursor-default"
                                                 )}
+                                                onClick={() => !isDemo && setSelectedTemplate(t)}
                                             >
                                                 <img src={t.preview_image_url} className="w-full h-full object-cover" alt={t.name} />
                                             </div>
                                         ))}
                                         {/* Custom Template Option */}
                                         <div
-                                            onClick={() => setSelectedTemplate({ id: 'custom', name: 'تصميم خاص', preview_image_url: '/logo/dawati-logo.png' })}
+                                            onClick={() => !isDemo && setSelectedTemplate({ id: 'custom', name: 'تصميم خاص', preview_image_url: '/logo/dawati-logo.png' })}
                                             className={cn(
                                                 "aspect-[3/4] rounded-xl overflow-hidden cursor-pointer border-4 transition-all flex flex-col items-center justify-center bg-zinc-50 gap-2 border-dashed",
                                                 selectedTemplate?.id === 'custom' ? "border-[#6A0DAD] bg-white shadow-lg" : "border-zinc-300 opacity-60"
@@ -303,15 +393,15 @@ export default function DesignPage() {
                                     )}
                                 </div>
 
-                                <FeatureSwitcher features={features} onChange={setFeatures} />
+                                <FeatureSwitcher features={features} onChange={(f: any) => setFeatures(f)} />
 
                                 <div className="pt-6">
                                     <button
                                         type="submit"
-                                        disabled={isLoading}
-                                        className="w-full py-4 bg-[#6A0DAD] text-white rounded-xl font-bold text-lg flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all"
+                                        disabled={isLoading || isDemo}
+                                        className="w-full py-4 bg-[#6A0DAD] text-white rounded-xl font-bold text-lg flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all disabled:opacity-50"
                                     >
-                                        {isLoading ? <Loader2 className="animate-spin" /> : 'حفظ وطلب التفعيل'}
+                                        {isLoading ? <Loader2 className="animate-spin" /> : (isDemo ? 'لا يمكن الحفظ في نمط التجربة' : 'حفظ وطلب التفعيل')}
                                         <ChevronRight className="w-5 h-5" />
                                     </button>
                                 </div>
@@ -365,9 +455,11 @@ export default function DesignPage() {
                             <div className="bg-white p-4 rounded-[2.5rem] shadow-xl border border-zinc-100 flex flex-col items-center">
                                 <div className="w-full aspect-[3/4.2] rounded-[2rem] overflow-hidden bg-zinc-50 relative border border-zinc-200">
                                     {/* Watermark */}
-                                    <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none rotate-[-45deg] opacity-10">
-                                        <span className="text-5xl font-black tracking-widest">دعواتي DAWATI</span>
-                                    </div>
+                                    {!isPaid && (
+                                        <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none rotate-[-45deg] opacity-10">
+                                            <span className="text-5xl font-black tracking-widest">دعواتي DAWATI</span>
+                                        </div>
+                                    )}
 
                                     {selectedTemplate && (
                                         <div className="relative w-full h-full">
@@ -393,11 +485,8 @@ export default function DesignPage() {
                             <div className="bg-[#6A0DAD] text-white p-6 rounded-3xl shadow-lg">
                                 <h4 className="font-bold flex items-center gap-2 mb-4"><Users className="w-5 h-5" /> تفاصيل التكلفة</h4>
                                 <div className="space-y-2 text-sm opacity-90">
-                                    <div className="flex justify-between"><span>السعر الأساسي</span><span>{BASE_TICKET_PRICE} ر.س</span></div>
-                                    <div className="flex justify-between"><span>الضيوف ({Math.min(guestCount, INCLUDED_GUESTS_COUNT)} مجاني)</span><span>{guestCount > INCLUDED_GUESTS_COUNT ? `${guestCount - INCLUDED_GUESTS_COUNT} × ${EXTRA_GUEST_PRICE}` : 'مجاني'}</span></div>
-                                    {features.reminders && <div className="flex justify-between"><span>رسائل التذكير</span><span>+50 ر.س</span></div>}
-                                    {features.thank_you && <div className="flex justify-between"><span>رسائل الشكر</span><span>+50 ر.س</span></div>}
-                                    {features.apple_wallet && <div className="flex justify-between"><span>Apple Wallet</span><span>+30 ر.س</span></div>}
+                                    <div className="flex justify-between"><span>باقة المدعوين ({guestsPackage})</span><span>{getPackagePrice(guestsPackage)} ر.س</span></div>
+                                    {mediaType === 'video' && <div className="flex justify-between"><span>ترقية فيديو</span><span>+50 ر.س</span></div>}
                                     <div className="pt-3 border-t border-white/20 flex justify-between font-black text-xl">
                                         <span>الإجمالي</span>
                                         <span>{totalPrice} ر.س</span>

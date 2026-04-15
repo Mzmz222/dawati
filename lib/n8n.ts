@@ -16,14 +16,15 @@ export interface N8NPayload {
   };
 }
 
-const N8N_WEBHOOK_URL = import.meta.env.NEXT_PUBLIC_N8N_WEBHOOK_URL || import.meta.env.VITE_N8N_WEBHOOK_URL;
-const SECRET_TOKEN = import.meta.env.VITE_N8N_SECRET_TOKEN;
+const N8N_WEBHOOK_URL = (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL : (import.meta as any).env?.VITE_N8N_WEBHOOK_URL) || 'http://localhost:5678/webhook-test/dawati';
+const SECRET_TOKEN = (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_N8N_SECRET : (import.meta as any).env?.VITE_N8N_SECRET_TOKEN) || 'dawati_secret_2024';
 
-export const triggerN8N = async (payload: N8NPayload) => {
-  if (!N8N_WEBHOOK_URL) {
-    console.error('N8N Webhook URL is missing');
-    return { success: false, error: 'Webhook URL missing' };
-  }
+export const triggerN8N = async (payload: any) => {
+  // Add timestamp for unique processing
+  const enrichedPayload = {
+    ...payload,
+    timestamp: new Date().toISOString()
+  };
 
   try {
     const response = await fetch(N8N_WEBHOOK_URL, {
@@ -32,7 +33,7 @@ export const triggerN8N = async (payload: N8NPayload) => {
         'Content-Type': 'application/json',
         'X-Dawati-Secret': SECRET_TOKEN || '',
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(enrichedPayload),
     });
 
     if (!response.ok) {
