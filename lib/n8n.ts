@@ -16,10 +16,10 @@ export interface N8NPayload {
   };
 }
 
-const N8N_WEBHOOK_URL = import.meta.env.VITE_N8N_WEBHOOK_URL || 'http://localhost:5678/webhook/dawati';
+const N8N_WEBHOOK_URL = import.meta.env.NEXT_PUBLIC_N8N_WEBHOOK_URL || import.meta.env.VITE_N8N_WEBHOOK_URL;
 const SECRET_TOKEN = import.meta.env.VITE_N8N_SECRET_TOKEN;
 
-export const triggerN8N = async (payload: any) => {
+export const triggerN8N = async (payload: N8NPayload) => {
   if (!N8N_WEBHOOK_URL) {
     console.error('N8N Webhook URL is missing');
     return { success: false, error: 'Webhook URL missing' };
@@ -32,10 +32,7 @@ export const triggerN8N = async (payload: any) => {
         'Content-Type': 'application/json',
         'X-Dawati-Secret': SECRET_TOKEN || '',
       },
-      body: JSON.stringify({
-        ...payload,
-        timestamp: new Date().toISOString()
-      }),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {

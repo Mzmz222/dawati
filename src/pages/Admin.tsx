@@ -104,6 +104,7 @@ export default function Admin() {
   const [isLoading, setIsLoading] = useState(false);
   const [savedTemplates, setSavedTemplates] = useState<any[]>([]);
   const [uploadProgress, setUploadProgress] = useState('');
+  const [demoTemplateId, setDemoTemplateId] = useState('');
 
   // Active card editor tab
   const [activeCardTab, setActiveCardTab] = useState<'invitation' | 'barcode'>('invitation');
@@ -131,8 +132,10 @@ export default function Admin() {
       if (data) setOrders(data);
     }
     if (activeTab === 'settings') {
-      const { data } = await supabase.from('site_settings').select('value').eq('key', 'whatsapp_number').single();
-      if (data) setWaNumber(data.value);
+      const { data: waData } = await supabase.from('site_settings').select('value').eq('key', 'whatsapp_number').single();
+      if (waData) setWaNumber(waData.value);
+      const { data: demoData } = await supabase.from('site_settings').select('value').eq('key', 'demo_template_id').single();
+      if (demoData) setDemoTemplateId(demoData.value);
     }
     if (activeTab === 'templates') {
       const { data } = await supabase.from('templates').select('*').order('created_at', { ascending: false });
@@ -238,19 +241,69 @@ export default function Admin() {
   };
 
   // ===================== OTHER HANDLERS =====================
-  const handleUpdateWa = async () => {
-    setIsLoading(true);
-    const { error } = await supabase.from('site_settings').upsert({ key: 'whatsapp_number', value: waNumber });
     setIsLoading(false);
-    if (error) alert('فشل تحديث الرقم');
-    else alert('تم تحديث رقم واتساب بنجاح');
+  };
+
+  const handleUpdateSettings = async () => {
+    setIsLoading(true);
+    await supabase.from('site_settings').upsert({ key: 'whatsapp_number', value: waNumber });
+    await supabase.from('site_settings').upsert({ key: 'demo_template_id', value: demoTemplateId });
+    setIsLoading(false);
+    alert('تم تحديث الإعدادات بنجاح');
+  };
+
+  const handleUploadOrderMedia = async (orderId: string, type: 'final_media' | 'empty_qr') => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*,video/*';
+    input.onchange = async (e: any) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      setIsLoading(true);
+      try {
+        const ext = file.name.split('.').pop();
+        const path = `orders/${orderId}/${type}_${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage.from('templates-images').upload(path, file);
+        if (uploadError) throw uploadError;
+        const { data: { publicUrl } } = supabase.storage.from('templates-images').getPublicUrl(path);
+        
+        const updateField = type === 'final_media' ? 'final_media_url' : 'empty_qr_url';
+        const { error: updateError } = await supabase.from('orders').update({ [updateField]: publicUrl }).eq('id', orderId);
+        if (updateError) throw updateError;
+        
+        fetchAdminData();
+        alert('تم رفع الملف وتحديث الطلب بنجاح');
+      } catch (err: any) {
+        alert('فشل الرفع: ' + err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    input.click();
   };
 
   const handleApproveOrder = async (orderId: string) => {
     setIsLoading(true);
-    const { error } = await supabase.from('orders').update({ status: 'paid' }).eq('id', orderId);
-    if (!error) setOrders(orders.map(o => o.id === orderId ? { ...o, status: 'paid' } : o));
-    setIsLoading(false);
+    try {
+      // Get event_id first
+      const { data: order } = await supabase.from('orders').select('event_id').eq('id', orderId).single();
+      if (!order) throw new Error('الطلب غير موجود');
+
+      // Update Order
+      const { error: orderError } = await supabase.from('orders').update({ status: 'paid' }).eq('id', orderId);
+      if (orderError) throw orderError;
+
+      // Update Event
+      const { error: eventError } = await supabase.from('events').update({ payment_status: 'paid' }).eq('id', order.event_id);
+      if (eventError) throw eventError;
+      
+      setOrders(orders.map(o => o.id === orderId ? { ...o, status: 'paid' } : o));
+      alert('تم تفعيل الطلب والمناسبة بنجاح');
+    } catch (err: any) {
+      alert('فشل التفعيل: ' + err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSendOfficialInvites = async (order: any) => {
@@ -728,9 +781,33 @@ export default function Admin() {
                     <td className="px-8 py-5">
                       <div className="font-bold">{o.users?.full_name}</div>
                       <div className="text-xs text-primary">{o.events?.title}</div>
-                      <div className="text-[10px] text-zinc-400 font-mono">#{o.id}</div>
+                      <div className="flex gap-2 mt-1">
+                        <span className="text-[10px] bg-zinc-100 px-1.5 py-0.5 rounded font-bold text-zinc-500">
+                          {o.guests_package} مدعو
+                        </span>
+                        <span className={cn("text-[10px] px-1.5 py-0.5 rounded font-bold", o.media_type === 'video' ? "bg-amber-50 text-amber-600" : "bg-blue-50 text-blue-600")}>
+                          {o.media_type === 'video' ? 'فيديو' : 'صورة'}
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-zinc-400 font-mono mt-1">#{o.id.slice(0, 8)}</div>
                     </td>
-                    <td className="px-8 py-5"><div className="font-bold text-lg">{o.amount} ر.س</div></td>
+                    <td className="px-8 py-5">
+                      <div className="font-bold text-lg">{o.amount} ر.س</div>
+                      <div className="flex flex-col gap-1 mt-2">
+                        <button 
+                          onClick={() => handleUploadOrderMedia(o.id, 'final_media')}
+                          className={cn("text-[10px] font-bold py-1 px-2 rounded flex items-center justify-center gap-1 border", o.final_media_url ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-zinc-50 text-zinc-400 border-zinc-100 hover:bg-zinc-100")}
+                        >
+                          <Upload className="w-3 h-3" /> {o.final_media_url ? 'تغيير الوسيط النهائي' : 'رفع الوسيط النهائي'}
+                        </button>
+                        <button 
+                          onClick={() => handleUploadOrderMedia(o.id, 'empty_qr')}
+                          className={cn("text-[10px] font-bold py-1 px-2 rounded flex items-center justify-center gap-1 border", o.empty_qr_url ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-zinc-50 text-zinc-400 border-zinc-100 hover:bg-zinc-100")}
+                        >
+                          <Upload className="w-3 h-3" /> {o.empty_qr_url ? 'تغيير كرت QR الفاضي' : 'رفع كرت QR الفاضي'}
+                        </button>
+                      </div>
+                    </td>
                     <td className="px-8 py-5 text-center">
                       <span className={cn("px-4 py-1.5 rounded-full text-xs font-bold",
                         o.status === 'paid' ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700")}>
@@ -771,7 +848,15 @@ export default function Admin() {
                   <input type="text" value={waNumber} onChange={(e) => setWaNumber(e.target.value)}
                     placeholder="9665xxxxxxxx" className="w-full bg-zinc-50 border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary/20" />
                 </div>
-                <button onClick={handleUpdateWa} disabled={isLoading}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-zinc-700 px-1">القالب التجريبي (Demo Template ID)</label>
+                  <select value={demoTemplateId} onChange={(e) => setDemoTemplateId(e.target.value)}
+                    className="w-full bg-zinc-50 border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary/20">
+                    <option value="">-- اختر قالب --</option>
+                    {savedTemplates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                  </select>
+                </div>
+                <button onClick={handleUpdateSettings} disabled={isLoading}
                   className="w-full bg-primary text-on-primary py-4 rounded-2xl font-bold flex items-center justify-center gap-3">
                   {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'حفظ التغييرات'}
                 </button>

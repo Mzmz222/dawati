@@ -19,6 +19,7 @@ import {
 import { cn } from '../lib/utils';
 import { supabase } from '../lib/supabase';
 import { triggerN8N, getWhatsAppNumber } from '../lib/n8n';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 
 // Helper: Get Arabic day name from date string
 const ARABIC_DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
@@ -58,14 +59,72 @@ export default function Design() {
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [templates, setTemplates] = useState<any[]>([]);
   const [previewType, setPreviewType] = useState<'invitation' | 'barcode'>('invitation');
-  const [isPaid] = useState(false);
+  const [isPaid, setIsPaid] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [eventId, setEventId] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const isDemo = searchParams.get('demo') === 'true';
+  const [guestsPackage, setGuestsPackage] = useState(10);
+  const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
+
+  // Pricing Logic
+  const getPackagePrice = (pkg: number) => {
+    if (pkg <= 50) return 200;
+    if (pkg <= 90) return 300;
+    if (pkg <= 150) return 400;
+    if (pkg <= 190) return 500;
+    if (pkg <= 250) return 600;
+    if (pkg <= 290) return 700;
+    if (pkg <= 350) return 800;
+    if (pkg <= 390) return 900;
+    if (pkg <= 450) return 1000;
+    return 1100;
+  };
+
+  const totalCost = getPackagePrice(guestsPackage) + (mediaType === 'video' ? 50 : 0);
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('dawati_user');
+    if (!userStr && !isDemo) {
+      alert('يرجى تسجيل الدخول أولاً لتتمكن من التصميم');
+      navigate('/login?redirect=/design');
+      return;
+    }
+    
+    if (isDemo) {
+      fetchDemoData();
+    }
+  }, [isDemo, navigate]);
+
+  const fetchDemoData = async () => {
+    try {
+      const { data: setting } = await supabase.from('site_settings').select('value').eq('key', 'demo_template_id').single();
+      if (setting?.value) {
+        setSelectedTemplate(setting.value);
+        // Set some dummy data for demo
+        reset({
+          groomName: 'فهد',
+          brideName: 'سارة',
+          date: new Date().toISOString().split('T')[0],
+          time: '20:00',
+          city: 'الرياض',
+          district: 'الملقا',
+          hallName: 'قاعة الفخامة',
+          locationUrl: 'https://maps.google.com'
+        });
+        setIsPaid(false); // Demo always shows watermark
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const {
     register,
     handleSubmit,
     watch,
+    reset,
     formState: { errors },
   } = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
@@ -103,9 +162,7 @@ export default function Design() {
   };
 
   const totalGuests = fields.length;
-  const baseCost = 250;
-  const extraGuestCost = 15;
-  const totalCost = baseCost + (totalGuests > 10 ? (totalGuests - 10) * extraGuestCost : 0);
+  // Cost handled by package logic above
 
   const onSaveEvent = async (data: EventFormData) => {
     if (!selectedTemplate) {
@@ -130,7 +187,8 @@ export default function Design() {
           hall_name: data.hallName,
           location_url: data.locationUrl,
           card_template_id: selectedTemplate,
-          payment_status: 'unpaid'
+          payment_status: 'unpaid',
+          is_demo: isDemo
         }])
         .select()
         .single();
@@ -145,7 +203,9 @@ export default function Design() {
           user_id: user.id,
           event_id: event.id,
           status: 'pending_payment',
-          amount: totalCost
+          amount: totalCost,
+          guests_package: guestsPackage,
+          media_type: mediaType
         }])
         .select()
         .single();
@@ -274,7 +334,8 @@ export default function Design() {
                   <input
                     {...register('groomName')}
                     placeholder="فهد"
-                    className={cn("w-full bg-surface-container-low border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary/20", errors.groomName && "ring-2 ring-error")}
+                    disabled={isDemo}
+                    className={cn("w-full bg-surface-container-low border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary/20", errors.groomName && "ring-2 ring-error", isDemo && "opacity-60")}
                   />
                   {errors.groomName && <p className="text-xs text-error font-bold">{errors.groomName.message}</p>}
                 </div>
@@ -284,7 +345,8 @@ export default function Design() {
                   <input
                     {...register('brideName')}
                     placeholder="سارة"
-                    className={cn("w-full bg-surface-container-low border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary/20", errors.brideName && "ring-2 ring-error")}
+                    disabled={isDemo}
+                    className={cn("w-full bg-surface-container-low border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary/20", errors.brideName && "ring-2 ring-error", isDemo && "opacity-60")}
                   />
                   {errors.brideName && <p className="text-xs text-error font-bold">{errors.brideName.message}</p>}
                 </div>
@@ -294,7 +356,8 @@ export default function Design() {
                   <input
                     {...register('date')}
                     type="date"
-                    className={cn("w-full bg-surface-container-low border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary/20", errors.date && "ring-2 ring-error")}
+                    disabled={isDemo}
+                    className={cn("w-full bg-surface-container-low border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary/20", errors.date && "ring-2 ring-error", isDemo && "opacity-60")}
                   />
                   {errors.date && <p className="text-xs text-error font-bold">{errors.date.message}</p>}
                 </div>
@@ -304,7 +367,8 @@ export default function Design() {
                   <input
                     {...register('time')}
                     type="time"
-                    className={cn("w-full bg-surface-container-low border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary/20", errors.time && "ring-2 ring-error")}
+                    disabled={isDemo}
+                    className={cn("w-full bg-surface-container-low border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary/20", errors.time && "ring-2 ring-error", isDemo && "opacity-60")}
                   />
                   {errors.time && <p className="text-xs text-error font-bold">{errors.time.message}</p>}
                 </div>
@@ -314,7 +378,8 @@ export default function Design() {
                   <input
                     {...register('city')}
                     placeholder="الرياض"
-                    className={cn("w-full bg-surface-container-low border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary/20", errors.city && "ring-2 ring-error")}
+                    disabled={isDemo}
+                    className={cn("w-full bg-surface-container-low border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary/20", errors.city && "ring-2 ring-error", isDemo && "opacity-60")}
                   />
                   {errors.city && <p className="text-xs text-error font-bold">{errors.city.message}</p>}
                 </div>
@@ -324,7 +389,8 @@ export default function Design() {
                   <input
                     {...register('district')}
                     placeholder="حي الملقا"
-                    className={cn("w-full bg-surface-container-low border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary/20", errors.district && "ring-2 ring-error")}
+                    disabled={isDemo}
+                    className={cn("w-full bg-surface-container-low border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary/20", errors.district && "ring-2 ring-error", isDemo && "opacity-60")}
                   />
                   {errors.district && <p className="text-xs text-error font-bold">{errors.district.message}</p>}
                 </div>
@@ -337,7 +403,8 @@ export default function Design() {
                   <input 
                     {...register('hallName')}
                     placeholder="مثال: قاعة الفخامة"
-                    className={cn("w-full bg-surface-container-low border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary/20", errors.hallName && "ring-2 ring-error")}
+                    disabled={isDemo}
+                    className={cn("w-full bg-surface-container-low border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary/20", errors.hallName && "ring-2 ring-error", isDemo && "opacity-60")}
                   />
                   {errors.hallName && <p className="text-xs text-error font-bold">{errors.hallName.message}</p>}
                 </div>
@@ -347,9 +414,57 @@ export default function Design() {
                   <input
                     {...register('locationUrl')}
                     placeholder="https://maps.app.goo.gl/..."
-                    className={cn("w-full bg-surface-container-low border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary/20", errors.locationUrl && "ring-2 ring-error")}
+                    disabled={isDemo}
+                    className={cn("w-full bg-surface-container-low border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary/20", errors.locationUrl && "ring-2 ring-error", isDemo && "opacity-60")}
                   />
                   {errors.locationUrl && <p className="text-xs text-error font-bold">{errors.locationUrl.message}</p>}
+                </div>
+              </div>
+
+              <div className="space-y-6 pt-4 border-t border-outline-variant/10">
+                <h3 className="text-xl font-bold text-on-surface font-headline">إعدادات الطلب</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-on-surface-variant px-1">عدد المدعوين (الباقة)</label>
+                    <select 
+                      value={guestsPackage}
+                      onChange={(e) => setGuestsPackage(Number(e.target.value))}
+                      disabled={isDemo}
+                      className="w-full bg-surface-container-low border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary/20 font-bold disabled:opacity-60"
+                    >
+                      {[...Array(50)].map((_, i) => (
+                        <option key={i} value={(i + 1) * 10}>{(i + 1) * 10} مدعو</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-on-surface-variant px-1">نوع الدعوة</label>
+                    <div className="flex gap-4 p-1 bg-surface-container-low rounded-2xl h-[56px]">
+                      <button
+                        type="button"
+                        onClick={() => !isDemo && setMediaType('image')}
+                        className={cn(
+                          "flex-1 rounded-xl font-bold transition-all",
+                          mediaType === 'image' ? "bg-white text-primary shadow-sm" : "text-on-surface-variant",
+                          isDemo && "cursor-not-allowed"
+                        )}
+                      >صورة</button>
+                      <button
+                        type="button"
+                        onClick={() => !isDemo && setMediaType('video')}
+                        className={cn(
+                          "flex-1 rounded-xl font-bold transition-all flex items-center justify-center gap-2",
+                          mediaType === 'video' ? "bg-white text-primary shadow-sm" : "text-on-surface-variant",
+                          isDemo && "cursor-not-allowed"
+                        )}
+                      >
+                        فيديو
+                        <span className="text-[10px] bg-secondary/10 px-1.5 py-0.5 rounded text-secondary">+50 ريال</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -359,10 +474,11 @@ export default function Design() {
                   {templates.map((temp) => (
                     <div 
                       key={temp.id}
-                      onClick={() => setSelectedTemplate(temp.id)}
+                      onClick={() => !isDemo && setSelectedTemplate(temp.id)}
                       className={cn(
                         "relative aspect-[3/4] cursor-pointer rounded-2xl overflow-hidden border-4 transition-all group",
-                        selectedTemplate === temp.id ? "border-primary scale-105 shadow-xl ring-4 ring-primary/10" : "border-outline-variant/10 opacity-70 hover:opacity-100"
+                        selectedTemplate === temp.id ? "border-primary scale-105 shadow-xl ring-4 ring-primary/10" : "border-outline-variant/10 opacity-70 hover:opacity-100",
+                        isDemo && "cursor-default"
                       )}
                     >
                       <img 
@@ -391,12 +507,12 @@ export default function Design() {
               <div className="flex flex-col gap-4 pt-6">
                 <button
                   type="submit"
-                  disabled={isLoading}
-                  className="w-full py-5 bg-gradient-to-r from-primary to-deeppurple-700 text-white rounded-2xl font-bold text-xl shadow-xl shadow-primary/20 flex items-center justify-center gap-3 transition-all hover:opacity-90 active:scale-95"
+                  disabled={isLoading || isDemo}
+                  className="w-full py-5 bg-gradient-to-r from-primary to-deeppurple-700 text-white rounded-2xl font-bold text-xl shadow-xl shadow-primary/20 flex items-center justify-center gap-3 transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
                 >
                   {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : (
                     <>
-                      حفظ وطلب التفعيل
+                      {isDemo ? 'لا يمكن الحفظ في نمط التجربة' : 'حفظ الطلب والدفع'}
                       <ChevronRight className="w-6 h-6" />
                     </>
                   )}
@@ -543,11 +659,13 @@ export default function Design() {
             {/* Live Preview Card */}
             <div className="bg-surface-container-lowest p-4 rounded-[3rem] shadow-2xl border border-outline-variant/10 relative overflow-hidden group">
               {/* Luxury Watermark */}
-              <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none overflow-hidden">
-                <div className="text-surface-container-highest/60 text-7xl font-black uppercase tracking-[1em] -rotate-45 whitespace-nowrap opacity-20 select-none">
-                  دعواتي - DAWATI
+              {!isPaid && (
+                <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none overflow-hidden">
+                  <div className="text-surface-container-highest/60 text-7xl font-black uppercase tracking-[1em] -rotate-45 whitespace-nowrap opacity-20 select-none">
+                    دعواتي - DAWATI
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="relative aspect-[3/4.5] rounded-[2.5rem] overflow-hidden bg-white shadow-inner flex flex-col items-center justify-center text-center p-12 border border-primary/5">
                 {/* Texture background */}
@@ -637,13 +755,13 @@ export default function Design() {
               <h4 className="text-lg font-bold text-primary font-headline">ملخص التكاليف</h4>
               <div className="space-y-3 font-body">
                 <div className="flex justify-between text-sm">
-                  <span className="text-on-surface-variant">التصميم والخدمة الأساسية (أول ١٠ مدعوين)</span>
-                  <span className="font-bold">{baseCost} ر.س</span>
+                  <span className="text-on-surface-variant">باقة {guestsPackage} مدعو ({mediaType === 'image' ? 'صورة' : 'فيديو'})</span>
+                  <span className="font-bold">{getPackagePrice(guestsPackage)} ر.س</span>
                 </div>
-                {totalGuests > 10 && (
+                {mediaType === 'video' && (
                   <div className="flex justify-between text-sm text-secondary">
-                    <span>مدعوين إضافيين ({totalGuests - 10} × {extraGuestCost} ر.س)</span>
-                    <span className="font-bold">{(totalGuests - 10) * extraGuestCost} ر.س</span>
+                    <span>إضافة فيديو</span>
+                    <span className="font-bold">50 ر.س</span>
                   </div>
                 )}
                 <div className="pt-4 border-t border-outline-variant/20 flex justify-between items-center">

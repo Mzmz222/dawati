@@ -8,14 +8,50 @@ import {
   Users, 
   MessageCircle,
   ArrowRight,
-  ChevronDown
+  ChevronDown,
+  Loader2,
+  Phone
 } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { getWhatsAppNumber } from '../lib/n8n';
+import { getWhatsAppNumber, triggerN8N } from '../lib/n8n';
 
 export default function Home() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [waNumber, setWaNumber] = useState('966500000000');
+  const [demoPhone, setDemoPhone] = useState('');
+  const [isDemoLoading, setIsDemoLoading] = useState(false);
+
+  const handleSendDemo = async () => {
+    if (!/^05\d{8}$/.test(demoPhone)) {
+      alert('يرجى إدخال رقم جوال صحيح (05xxxxxxxx)');
+      return;
+    }
+    setIsDemoLoading(true);
+    try {
+      const result = await triggerN8N({
+        action: 'send_preview',
+        is_preview: true,
+        customer: {
+          name: 'زائر تجريبي',
+          phone: demoPhone
+        },
+        images: {
+          watermarked: 'https://vohlymyegztabzgikbqv.supabase.co/storage/v1/object/public/templates-images/demo-preview.jpg',
+          original: 'https://vohlymyegztabzgikbqv.supabase.co/storage/v1/object/public/templates-images/demo-preview.jpg'
+        }
+      });
+      if (result.success) {
+        alert('تم إرسال الرسالة التجريبية لهاتفك بنجاح!');
+        setDemoPhone('');
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (err: any) {
+      alert('حدث خطأ أثناء الإرسال: ' + err.message);
+    } finally {
+      setIsDemoLoading(false);
+    }
+  };
 
   useEffect(() => {
     getWhatsAppNumber().then(setWaNumber);
@@ -67,6 +103,39 @@ export default function Home() {
         <div className="absolute -bottom-20 -right-20 w-96 h-96 bg-secondary/5 rounded-full blur-3xl"></div>
       </section>
 
+      {/* Demo Section */}
+      <section className="bg-white py-16 border-y border-outline-variant/10">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <div className="bg-gradient-to-br from-primary/5 to-secondary/5 p-12 rounded-[2.5rem] border border-primary/10 space-y-8">
+            <div className="space-y-4">
+              <h3 className="text-3xl font-bold text-primary font-headline">جرب الرسالة التجريبية (مجاناً)</h3>
+              <p className="text-on-surface-variant font-body">أدخل رقم جوالك لتصلك عينة من الدعوة الإلكترونية عبر واتساب الآن.</p>
+            </div>
+            <div className="flex flex-col md:flex-row gap-4 max-w-lg mx-auto">
+              <div className="flex-1 relative">
+                <Phone className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-on-surface-variant/40" />
+                <input 
+                  type="text" 
+                  value={demoPhone}
+                  onChange={(e) => setDemoPhone(e.target.value)}
+                  placeholder="05xxxxxxxx"
+                  className="w-full bg-white border-2 border-primary/10 rounded-2xl py-4 pr-12 pl-4 focus:ring-2 focus:ring-primary/20 transition-all font-body text-right dir-ltr"
+                />
+              </div>
+              <button 
+                onClick={handleSendDemo}
+                disabled={isDemoLoading}
+                className="px-8 py-4 bg-primary text-on-primary rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-primary-900 transition-colors shadow-lg shadow-primary/20 disabled:opacity-50"
+              >
+                {isDemoLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <MessageCircle className="w-5 h-5" />}
+                أرسل لي التجربة
+              </button>
+            </div>
+            <p className="text-[10px] text-on-surface-variant/60 font-body">سيتم إرسال رسالة واحدة فقط لغرض التجربة. خصوصيتك محفوظة.</p>
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section className="py-24 bg-surface-container-low text-center">
         <div className="max-w-7xl mx-auto px-6">
@@ -91,11 +160,11 @@ export default function Home() {
             </div>
 
             {/* Feature 3: Try Before Pay */}
-            <div className="md:col-span-4 bg-tertiary-container text-on-tertiary-container p-10 rounded-3xl border border-tertiary/10 text-center flex flex-col items-center justify-center group hover:scale-[1.02] transition-transform">
+            <Link to="/design?demo=true" className="md:col-span-4 bg-tertiary-container text-on-tertiary-container p-10 rounded-3xl border border-tertiary/10 text-center flex flex-col items-center justify-center group hover:scale-[1.02] transition-transform">
               <Eye className="w-12 h-12 mb-6" />
-              <h4 className="text-2xl font-bold mb-4 font-headline">جرب قبل الدفع</h4>
-              <p className="leading-relaxed mx-auto font-body opacity-90">نثق بجودة خدماتنا، لذا نتيح لك تجربة كافة الخصائص قبل إتمام عملية الدفع.</p>
-            </div>
+              <h4 className="text-2xl font-bold mb-4 font-headline">جرب العرض (Demo)</h4>
+              <p className="leading-relaxed mx-auto font-body opacity-90">شاهد تجربة حية للدعوة الإلكترونية وطريقة عرضها للضيوف قبل البدء.</p>
+            </Link>
 
             {/* Feature 4: Ready Templates */}
             <div className="md:col-span-4 bg-white p-10 rounded-3xl shadow-sm border border-outline-variant/10 text-center flex flex-col items-center justify-center group hover:scale-[1.02] transition-transform">
